@@ -7,6 +7,9 @@ import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { TouchableOpacity, View } from "react-native";
 
+import Feather from "@expo/vector-icons/Feather";
+import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
+
 export default function TabLayout() {
   const colorScheme = useColorScheme();
 
@@ -35,11 +38,20 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="stats"
         options={{
-          title: "Explore",
+          title: "Stats",
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="paperplane.fill" color={color} />
+            <Feather name="activity" size={28} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="workout"
+        options={{
+          title: "Workout",
+          tabBarIcon: ({ color }) => (
+            <FontAwesome5 name="running" size={28} color={color} />
           ),
         }}
       />

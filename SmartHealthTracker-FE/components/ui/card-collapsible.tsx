@@ -15,7 +15,7 @@ export function CardCollapsible({
   const colorScheme = useColorScheme() ?? "light";
 
   return (
-    <View className="bg-blue-100 p-4 rounded-2xl shadow-md ">
+    <View className="bg-white p-4 rounded-2xl shadow-md ">
       <View className="flex-row items-center gap-4">
         <IconSymbol
           size={32}
