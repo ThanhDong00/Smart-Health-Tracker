@@ -1,36 +1,53 @@
 import MenuSection from "@/components/ui/account/menu-section";
 import SettingItem from "@/components/ui/account/setting-item";
-import { View } from "react-native";
+import { Colors } from "@/constants/theme";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { router } from "expo-router";
+import { useColorScheme, View } from "react-native";
 
 export default function SettingsScreen() {
-  return (
-    <View className="flex-1 bg-neutral-100 p-8 felx-col gap-4">
-      <MenuSection>
-        <SettingItem
-          icon="gearshape.fill"
-          label="App Settings"
-          onPress={() => {}}
-        ></SettingItem>
+  const colorScheme = useColorScheme() ?? "light";
 
-        <SettingItem
-          icon="gearshape.fill"
-          label="App Settings"
-          onPress={() => {}}
-        ></SettingItem>
+  return (
+    <View className="flex-1 bg-background p-8 felx-col gap-4">
+      <MenuSection>
+        <SettingItem label="Sedentary Detection" onPress={() => {}}>
+          <MaterialIcons
+            name="airline-seat-recline-normal"
+            size={24}
+            color="black"
+          />
+        </SettingItem>
       </MenuSection>
 
       <MenuSection>
-        <SettingItem
-          icon="gearshape.fill"
-          label="App Settings"
-          onPress={() => {}}
-        ></SettingItem>
+        <SettingItem label="Personal Info" onPress={() => {}}>
+          <MaterialIcons name="person" size={24} color="black" />
+        </SettingItem>
 
         <SettingItem
-          icon="gearshape.fill"
-          label="App Settings"
-          onPress={() => {}}
-        ></SettingItem>
+          label="App Appearance"
+          onPress={() => router.push("/settings/appearance")}
+        >
+          <MaterialCommunityIcons
+            name="theme-light-dark"
+            size={24}
+            color={Colors[colorScheme].textPrimary}
+          />
+        </SettingItem>
+
+        <SettingItem label="Linked Accounts" onPress={() => {}}>
+          <MaterialIcons name="link" size={24} color="black" />
+        </SettingItem>
+
+        <SettingItem label="Help & Support" onPress={() => {}}>
+          <MaterialIcons name="help-outline" size={24} color="black" />
+        </SettingItem>
+
+        <SettingItem label="Logout" onPress={() => {}}>
+          <MaterialIcons name="logout" size={24} color="red" />
+        </SettingItem>
       </MenuSection>
     </View>
   );

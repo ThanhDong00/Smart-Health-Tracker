@@ -5,10 +5,11 @@ import { HapticTab } from "@/components/haptic-tab";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
-import { TouchableOpacity, View } from "react-native";
 
 import Feather from "@expo/vector-icons/Feather";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -16,16 +17,34 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
+        tabBarActiveTintColor: Colors[colorScheme ?? "light"].primary,
         tabBarButton: HapticTab,
         headerShown: true,
         headerTitleAlign: "center",
-        headerLeft: () => null,
-        headerRight: () => (
-          <TouchableOpacity className=" mr-4">
-            <View className=" w-12 h-12 rounded-full bg-slate-500"></View>
-          </TouchableOpacity>
-        ),
+        headerLeft: () => {
+          return (
+            <FontAwesome
+              name="heartbeat"
+              size={32}
+              color="red"
+              className="px-4"
+            />
+          );
+        },
+        headerRight: () => {
+          return (
+            <MaterialIcons
+              name="notifications-none"
+              size={24}
+              color="black"
+              className="px-4"
+            />
+            // <MaterialIcons name="notifications-active" size={24} color="black" />
+          );
+        },
+        headerTitleStyle: {
+          fontWeight: "bold",
+        },
       }}
     >
       <Tabs.Screen

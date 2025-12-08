@@ -5,11 +5,27 @@ import { Text, View } from "react-native";
 
 export default function HomeScreen() {
   return (
-    <View className="flex-1 bg-neutral-100 p-8 felx-col gap-4">
+    <View className="flex-1 bg-background p-8 felx-col gap-4">
+      <View className="mb-2">
+        <Text className="text-3xl font-bold">Welcome back, [Name]!</Text>
+        <Text className="text-lg">
+          Here's a summary of your health stats for today.
+        </Text>
+      </View>
+
       {/* Walk */}
-      <CardCollapsible title="Daily Walking" subtitle="Total steps in a day">
+      <CardCollapsible
+        title="Daily Walking"
+        subtitle="Total steps in a day"
+        icon="figure.walk"
+      >
         <View>
-          <ProgressBar current={6754} max={10000} />
+          <ProgressBar
+            current={6754}
+            max={10000}
+            color="bg-primary"
+            backgroundColor="bg-secondary"
+          />
 
           <View className="mt-2 flex-row justify-between">
             <View>
@@ -22,12 +38,13 @@ export default function HomeScreen() {
         </View>
       </CardCollapsible>
 
-      <CardCollapsible title="Heart Rate" subtitle="72 bpm" />
+      <CardCollapsible title="Heart Rate" subtitle="72 bpm" icon="heart.fill" />
 
       {/* Sleep */}
       <CardCollapsible
         title="Sleep Tracking"
         subtitle="Sleep duration in hours"
+        icon="moon.fill"
       >
         <SleepBarChart />
       </CardCollapsible>

@@ -6,7 +6,7 @@ export default function MenuSection({
   children: React.ReactNode;
 }) {
   return (
-    <View className="bg-white rounded-xl overflow-hidden shadow-sm mb-4">
+    <View className="bg-cardBackground rounded-xl overflow-hidden shadow-sm mb-4">
       {children}
     </View>
   );

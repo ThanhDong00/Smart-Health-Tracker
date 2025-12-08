@@ -8,22 +8,26 @@ export function CardCollapsible({
   children,
   title,
   subtitle,
+  icon = "house.fill",
 }: PropsWithChildren & {
   title: string;
   subtitle: string;
+  icon?: any;
 }) {
   const colorScheme = useColorScheme() ?? "light";
 
   return (
     <View className="bg-white p-4 rounded-2xl shadow-md ">
       <View className="flex-row items-center gap-4">
-        <IconSymbol
-          size={32}
-          name="house.fill"
-          color={Colors[colorScheme ?? "light"].tint}
-        />
+        <View className=" bg-secondary rounded-full p-2">
+          <IconSymbol
+            size={32}
+            name={icon}
+            color={Colors[colorScheme ?? "light"].primary}
+          />
+        </View>
         <View>
-          <Text className="text-lg">{title}</Text>
+          <Text className="text-lg font-semibold">{title}</Text>
           <Text>{subtitle}</Text>
         </View>
         {/* <TouchableOpacity

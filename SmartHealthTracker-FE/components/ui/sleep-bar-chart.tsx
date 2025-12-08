@@ -1,8 +1,11 @@
+import { Colors } from "@/constants/theme";
 import { useFont } from "@shopify/react-native-skia";
-import { View } from "react-native";
+import { useColorScheme, View } from "react-native";
 import { Bar, CartesianChart } from "victory-native";
 
 export default function SleepBarChart() {
+  const colorScheme = useColorScheme() ?? "light";
+
   const data = [
     { day: "Mon", hours: 6.5 },
     { day: "Tue", hours: 7 },
@@ -38,6 +41,7 @@ export default function SleepBarChart() {
             chartBounds={chartBounds}
             points={points.hours}
             roundedCorners={{ topLeft: 4, topRight: 4 }}
+            color={Colors[colorScheme ?? "light"].primary}
           />
         )}
       </CartesianChart>

@@ -25,6 +25,9 @@ const MAPPING = {
   "chevron.up": "expand-less",
   "chevron.down": "expand-more",
   "gearshape.fill": "settings",
+  "figure.walk": "directions-walk",
+  "heart.fill": "favorite",
+  "moon.fill": "dark-mode",
 } as IconMapping;
 
 /**
