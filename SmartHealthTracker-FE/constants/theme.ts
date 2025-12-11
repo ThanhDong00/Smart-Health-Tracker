@@ -5,7 +5,7 @@
 
 import { Platform } from "react-native";
 
-const tintColorLight = "#0a7ea4";
+const tintColorLight = "#7f27ff";
 const tintColorDark = "#fff";
 
 export const Colors = {
@@ -19,18 +19,23 @@ export const Colors = {
   // },
   light: {
     primary: "#7f27ff",
+    primaryPressed: "#5e1ab0",
     secondary: "#c297ff",
     // accent: "#F59E0B",
     background: "#f5f5f5",
     cardBackground: "#FFFFFF",
     textPrimary: "black",
     textSecondary: "#2e2e2e",
+    inputBackground: "#fafafa",
   },
   dark: {
     primary: "#7f27ff",
+    primaryPressed: "#5e1ab0",
+    secondary: "#35383f",
     textPrimary: "white",
     text: "#ECEDEE",
     background: "#151718",
+    inputBackground: "#1f222a",
     tint: tintColorDark,
     icon: "#9BA1A6",
     tabIconDefault: "#9BA1A6",

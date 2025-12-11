@@ -16,6 +16,8 @@ module.exports = {
         cardBackground: "#FFFFFF",
         textPrimary: "black",
         textSecondary: "#2e2e2e",
+        light_inputBackground: "#fafafa",
+        dark_inputBackground: "#1f222a",
 
         dark_background: "#1F2937",
         dark_cardBackground: "#374151",

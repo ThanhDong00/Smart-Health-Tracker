@@ -9,8 +9,12 @@ import { useColorScheme, View } from "react-native";
 export default function SettingsScreen() {
   const colorScheme = useColorScheme() ?? "light";
 
+  const logoutHandle = () => {
+    router.replace("/welcome");
+  };
+
   return (
-    <View className="flex-1 bg-background p-8 felx-col gap-4">
+    <View className="flex-1 bg-background p-8 flex-col gap-4">
       <MenuSection>
         <SettingItem label="Sedentary Detection" onPress={() => {}}>
           <MaterialIcons
@@ -45,7 +49,7 @@ export default function SettingsScreen() {
           <MaterialIcons name="help-outline" size={24} color="black" />
         </SettingItem>
 
-        <SettingItem label="Logout" onPress={() => {}}>
+        <SettingItem label="Logout" onPress={logoutHandle}>
           <MaterialIcons name="logout" size={24} color="red" />
         </SettingItem>
       </MenuSection>
