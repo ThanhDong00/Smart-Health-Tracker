@@ -9,11 +9,11 @@ export default function WelcomeScreen() {
   const colorScheme = useColorScheme() ?? "light";
 
   const loginButtonHandle = () => {
-    router.push("/login");
+    router.push("/auth/login");
   };
 
   const signupButtonHandle = () => {
-    router.push("/signup");
+    router.push("/auth/signup");
   };
 
   return (
