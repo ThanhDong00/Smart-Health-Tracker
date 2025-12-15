@@ -1,13 +1,13 @@
 import { CardCollapsible } from "@/components/ui/card-collapsible";
 import ProgressBar from "@/components/ui/progress-bar-h";
 import SleepBarChart from "@/components/ui/sleep-bar-chart";
-import { useAuth } from "@/hooks/useAuth";
+import { useUserStore } from "@/store/user.store";
 import { Text, View } from "react-native";
 
 export default function HomeScreen() {
-  const { user, token } = useAuth();
-  console.log(token);
+  const { profile } = useUserStore();
 
+  console.log("User Profile:", profile);
   return (
     <View className="flex-1 bg-background p-8 felx-col gap-4">
       <View className="mb-2">

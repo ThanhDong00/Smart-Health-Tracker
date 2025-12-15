@@ -1,10 +1,11 @@
 import { authService } from "@/services/auth.service";
 import { secureStorageService } from "@/services/secureStorage.sevice";
+import { UserService } from "@/services/user.service";
 import { User } from "firebase/auth";
 import { create } from "zustand";
+import { useUserStore } from "./user.store";
 
 interface AuthState {
-  appUser: any | null;
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
@@ -21,7 +22,6 @@ interface AuthState {
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
-  appUser: null,
   user: null,
   token: null,
   isAuthenticated: false,
@@ -58,6 +58,14 @@ export const useAuthStore = create<AuthState>((set) => ({
         isAuthenticated: true,
         isLoading: false,
       });
+
+      // Load profile after sign in from be
+      try {
+        const profile = await UserService.getUserProfile();
+        useUserStore.getState().setProfile(profile);
+      } catch (error) {
+        console.error("Failed to load user profile:", error);
+      }
     } catch (error) {
       set({ isLoading: false });
       throw error;
@@ -80,6 +88,14 @@ export const useAuthStore = create<AuthState>((set) => ({
         isAuthenticated: true,
         isLoading: false,
       });
+
+      // Load profile after sign in from be
+      try {
+        const profile = await UserService.getUserProfile();
+        useUserStore.getState().setProfile(profile);
+      } catch (error) {
+        console.error("Failed to load user profile:", error);
+      }
     } catch (error) {
       set({ isLoading: false });
       throw error;
@@ -138,6 +154,14 @@ export const useAuthStore = create<AuthState>((set) => ({
             isLoading: false,
             isInitialized: true,
           });
+
+          // Load profile from be
+          try {
+            const profile = await UserService.getUserProfile();
+            useUserStore.getState().setProfile(profile);
+          } catch (error) {
+            console.error("Failed to load user profile:", error);
+          }
         } else {
           await secureStorageService.clearAll();
 
