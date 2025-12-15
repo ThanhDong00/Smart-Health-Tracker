@@ -1,10 +1,30 @@
 import PrimaryButton from "@/components/primary-button";
+import { useAuth } from "@/hooks/useAuth";
 import { router, Stack } from "expo-router";
 import { useState } from "react";
-import { Text, TextInput, View } from "react-native";
+import { Alert, Text, TextInput, View } from "react-native";
 
 export default function ForgotPasswordScreen() {
+  const { sendPasswordReset, isLoading } = useAuth();
   const [email, setEmail] = useState("");
+
+  const handleSendResetEmail = async () => {
+    if (!email) {
+      Alert.alert("Error", "Please enter your email");
+      return;
+    }
+
+    try {
+      await sendPasswordReset(email);
+      Alert.alert(
+        "Success",
+        "Password reset email sent. Please check your inbox.",
+        [{ text: "OK", onPress: () => router.back() }]
+      );
+    } catch (error: any) {
+      Alert.alert("Error", error.message || "Failed to send reset email");
+    }
+  };
 
   return (
     <>
@@ -45,11 +65,15 @@ export default function ForgotPasswordScreen() {
 
         {/* Button */}
         <View>
-          <PrimaryButton
+          {/* <PrimaryButton
             title="Send OTP Code"
             onPress={() => {
               router.push("/auth/verify-otp");
             }}
+          /> */}
+          <PrimaryButton
+            title={isLoading ? "Sending..." : "Send Reset Link"}
+            onPress={handleSendResetEmail}
           />
         </View>
       </View>
