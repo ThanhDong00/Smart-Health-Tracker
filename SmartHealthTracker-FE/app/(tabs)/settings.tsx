@@ -1,16 +1,32 @@
 import MenuSection from "@/components/ui/account/menu-section";
 import SettingItem from "@/components/ui/account/setting-item";
 import { Colors } from "@/constants/theme";
+import { useAuth } from "@/hooks/useAuth";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router } from "expo-router";
-import { useColorScheme, View } from "react-native";
+import { Alert, useColorScheme, View } from "react-native";
 
 export default function SettingsScreen() {
   const colorScheme = useColorScheme() ?? "light";
+  const { signOut, isLoading } = useAuth();
 
   const logoutHandle = () => {
-    router.replace("/welcome");
+    Alert.alert("Logout", "Are you sure you want to logout?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Logout",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await signOut();
+            router.replace("/welcome");
+          } catch (error: any) {
+            Alert.alert("Error", error.message || "Failed to logout");
+          }
+        },
+      },
+    ]);
   };
 
   return (

@@ -1,20 +1,35 @@
 import PasswordInput from "@/components/password-input";
 import PrimaryButton from "@/components/primary-button";
+import { useAuth } from "@/hooks/useAuth";
 import { router, Stack } from "expo-router";
 import { useState } from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { Alert, Pressable, Text, TextInput, View } from "react-native";
 
 export default function LoginScreen() {
+  const { signIn, isLoading } = useAuth();
   const [signInForm, setSignInForm] = useState({
     email: "",
     password: "",
   });
-
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
   const updateForm = (key: keyof typeof signInForm) => (value: string) =>
     setSignInForm((prev) => ({ ...prev, [key]: value }));
+
+  const handleSignIn = async () => {
+    if (!signInForm.email || !signInForm.password) {
+      Alert.alert("Error", "Please fill in all fields");
+      return;
+    }
+
+    try {
+      await signIn(signInForm.email, signInForm.password);
+      router.replace("/(tabs)");
+    } catch (error: any) {
+      Alert.alert("Error", error.message || "Failed to sign in");
+    }
+  };
 
   return (
     <>
@@ -78,11 +93,7 @@ export default function LoginScreen() {
               <Text className="text-sm text-gray-700">Remember me</Text>
             </Pressable>
 
-            <Pressable
-              onPress={() => {
-                router.replace("/auth/forgot");
-              }}
-            >
+            <Pressable onPress={() => router.push("/auth/forgot")}>
               <Text className="text-sm text-primary underline">
                 Forgot password?
               </Text>
@@ -92,13 +103,11 @@ export default function LoginScreen() {
 
         {/* Button & other */}
         <View className="gap-4">
-          {/* Sign up button */}
           <View>
             <PrimaryButton
-              title="Sign In"
-              onPress={() => {
-                router.replace("/");
-              }}
+              title={isLoading ? "Signing In..." : "Sign In"}
+              onPress={handleSignIn}
+              disabled={isLoading}
             />
           </View>
 

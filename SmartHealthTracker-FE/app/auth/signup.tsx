@@ -1,10 +1,12 @@
 import PasswordInput from "@/components/password-input";
 import PrimaryButton from "@/components/primary-button";
+import { useAuth } from "@/hooks/useAuth";
 import { router, Stack } from "expo-router";
 import { useState } from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { Alert, Pressable, Text, TextInput, View } from "react-native";
 
 export default function SignupScreen() {
+  const { signUp, isLoading } = useAuth();
   const [signupForm, setSignupForm] = useState({
     email: "",
     password: "",
@@ -16,8 +18,32 @@ export default function SignupScreen() {
   const updateForm = (key: keyof typeof signupForm) => (value: string) =>
     setSignupForm((prev) => ({ ...prev, [key]: value }));
 
-  const togglePasswordVisibility = () => {
-    setIsPasswordVisible(!isPasswordVisible);
+  const handleSignUp = async () => {
+    if (
+      !signupForm.email ||
+      !signupForm.password ||
+      !signupForm.confirmPassword
+    ) {
+      Alert.alert("Error", "Please fill in all fields");
+      return;
+    }
+
+    if (signupForm.password !== signupForm.confirmPassword) {
+      Alert.alert("Error", "Passwords do not match");
+      return;
+    }
+
+    if (signupForm.password.length < 6) {
+      Alert.alert("Error", "Password must be at least 6 characters");
+      return;
+    }
+
+    try {
+      await signUp(signupForm.email, signupForm.password);
+      router.replace("/(tabs)");
+    } catch (error: any) {
+      Alert.alert("Error", error.message || "Failed to sign up");
+    }
   };
 
   return (
@@ -60,7 +86,7 @@ export default function SignupScreen() {
             value={signupForm.password}
             onChangeText={updateForm("password")}
             visible={isPasswordVisible}
-            onToggle={togglePasswordVisibility}
+            onToggle={() => setIsPasswordVisible(!isPasswordVisible)}
             placeholder="Enter your password"
           />
 
@@ -77,7 +103,11 @@ export default function SignupScreen() {
         <View className="gap-4">
           {/* Sign up button */}
           <View>
-            <PrimaryButton title="Sign Up" onPress={() => {}} />
+            <PrimaryButton
+              title={isLoading ? "Creating Account..." : "Sign Up"}
+              onPress={handleSignUp}
+              disabled={isLoading}
+            />
           </View>
 
           {/* Sign in link */}

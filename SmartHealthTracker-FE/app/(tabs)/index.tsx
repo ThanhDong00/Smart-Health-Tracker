@@ -1,13 +1,17 @@
 import { CardCollapsible } from "@/components/ui/card-collapsible";
 import ProgressBar from "@/components/ui/progress-bar-h";
 import SleepBarChart from "@/components/ui/sleep-bar-chart";
+import { useAuth } from "@/hooks/useAuth";
 import { Text, View } from "react-native";
 
 export default function HomeScreen() {
+  const { user, token } = useAuth();
+  console.log(token);
+
   return (
     <View className="flex-1 bg-background p-8 felx-col gap-4">
       <View className="mb-2">
-        <Text className="text-3xl font-bold">Welcome back, [Name]!</Text>
+        <Text className="text-3xl font-bold">Welcome back!</Text>
         <Text className="text-lg">
           Here's a summary of your health stats for today.
         </Text>
