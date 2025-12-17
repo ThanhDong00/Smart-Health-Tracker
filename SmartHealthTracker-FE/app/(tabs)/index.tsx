@@ -9,7 +9,7 @@ export default function HomeScreen() {
 
   console.log("User Profile:", profile);
   return (
-    <View className="flex-1 bg-background p-8 felx-col gap-4">
+    <View className="flex-1 bg-background p-8 flex-col gap-4">
       <View className="mb-2">
         <Text className="text-3xl font-bold">Welcome back!</Text>
         <Text className="text-lg">
