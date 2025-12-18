@@ -62,7 +62,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       // Load profile after sign in from be
       try {
         const profile = await UserService.getUserProfile();
-        useUserStore.getState().setProfile(profile);
+        useUserStore.getState().setProfile(profile.data);
       } catch (error) {
         console.error("Failed to load user profile:", error);
       }
@@ -92,7 +92,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       // Load profile after sign in from be
       try {
         const profile = await UserService.getUserProfile();
-        useUserStore.getState().setProfile(profile);
+        useUserStore.getState().setProfile(profile.data);
       } catch (error) {
         console.error("Failed to load user profile:", error);
       }
@@ -158,7 +158,7 @@ export const useAuthStore = create<AuthState>((set) => ({
           // Load profile from be
           try {
             const profile = await UserService.getUserProfile();
-            useUserStore.getState().setProfile(profile);
+            useUserStore.getState().setProfile(profile.data);
           } catch (error) {
             console.error("Failed to load user profile:", error);
           }

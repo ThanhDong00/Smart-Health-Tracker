@@ -1,12 +1,20 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Stack } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import {
+  Alert,
+  Image,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 import PrimaryButton from "@/components/primary-button";
 import DobInputField from "@/components/ui/dob-input-field";
 import InputField from "@/components/ui/input-field";
 import SelectedField from "@/components/ui/selected-field";
+import { UserService } from "@/services/user.service";
 import { useUserStore } from "@/store/user.store";
 
 type FormState = {
@@ -39,8 +47,9 @@ const AvatarSection = ({ onEdit }: { onEdit: () => void }) => (
 );
 
 export default function PersonalInforScreen() {
-  const { profile } = useUserStore();
+  const { profile, setProfile } = useUserStore();
   const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [form, setForm] = useState<FormState>({
     email: "",
     fullName: "",
@@ -51,9 +60,9 @@ export default function PersonalInforScreen() {
   });
 
   const initialFormFromProfile = useMemo<FormState>(() => {
-    const email = profile?.data.email ?? "";
+    const email = profile?.email ?? "";
 
-    let fullName = profile?.data.fullName?.trim() ?? "";
+    let fullName = profile?.fullName?.trim() ?? "";
     if (!fullName && email) {
       fullName = email.split("@")[0];
     }
@@ -61,12 +70,12 @@ export default function PersonalInforScreen() {
     return {
       email,
       fullName,
-      gender: profile?.data.gender || "Not Specified",
-      dateOfBirth: profile?.data.dateOfBirth
-        ? new Date(profile.data.dateOfBirth)
+      gender: profile?.gender || "Not Specified",
+      dateOfBirth: profile?.dateOfBirth
+        ? new Date(profile.dateOfBirth)
         : undefined,
-      height: profile?.data.heightCm ? String(profile.data.heightCm) : "",
-      weight: profile?.data.weightKg ? String(profile.data.weightKg) : "",
+      height: profile?.heightCm ? String(profile.heightCm) : "",
+      weight: profile?.weightKg ? String(profile.weightKg) : "",
     };
   }, [profile]);
 
@@ -83,18 +92,70 @@ export default function PersonalInforScreen() {
     setIsEditing((prev) => !prev);
   };
 
-  const handleSave = () => {
+  const validateForm = (): boolean => {
+    // Validate height
+    if (
+      form.height &&
+      (isNaN(Number(form.height)) || Number(form.height) <= 0)
+    ) {
+      Alert.alert("Validation Error", "Height must be a positive number");
+      return false;
+    }
+
+    // Validate weight
+    if (
+      form.weight &&
+      (isNaN(Number(form.weight)) || Number(form.weight) <= 0)
+    ) {
+      Alert.alert("Validation Error", "Weight must be a positive number");
+      return false;
+    }
+
+    // Validate date of birth (not in future)
+    if (form.dateOfBirth && form.dateOfBirth > new Date()) {
+      Alert.alert("Validation Error", "Date of birth cannot be in the future");
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleSave = async () => {
+    if (!validateForm()) {
+      return;
+    }
+
     const formData = {
-      email: form.email,
+      // email: form.email,
       fullName: form.fullName || null,
       gender: form.gender === "Not Specified" ? null : form.gender,
       dateOfBirth: form.dateOfBirth || null,
-      height: form.height ? Number(form.height) : null,
-      weight: form.weight ? Number(form.weight) : null,
+      heightCm: form.height ? Number(form.height) : null,
+      weightKg: form.weight ? Number(form.weight) : null,
     };
 
-    setIsEditing(false);
-    console.log("Saved form data:", formData);
+    setIsLoading(true);
+    try {
+      const response = await UserService.updateUserProfile(formData);
+
+      if (response.message === "User profile updated successfully") {
+        // Update profile in store
+        setProfile(response.data);
+        setIsEditing(false);
+
+        console.log("======Profile in store after update:", profile);
+        Alert.alert("Success", "Profile updated successfully");
+      } else {
+        Alert.alert("Error", response.message || "Failed to update profile");
+      }
+    } catch (error: any) {
+      Alert.alert(
+        "Error",
+        error.message || "An error occurred while updating profile"
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleButtonPress = () => {
@@ -208,6 +269,8 @@ export default function PersonalInforScreen() {
           <PrimaryButton
             title={isEditing ? "Save Changes" : "Edit Profile"}
             onPress={handleButtonPress}
+            disabled={isLoading}
+            // isLoading={isLoading}
           />
         </View>
       </ScrollView>
