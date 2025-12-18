@@ -42,7 +42,10 @@ export default function SettingsScreen() {
       </MenuSection>
 
       <MenuSection>
-        <SettingItem label="Personal Info" onPress={() => {}}>
+        <SettingItem
+          label="Personal Info"
+          onPress={() => router.push("/settings/personal-infor")}
+        >
           <MaterialIcons name="person" size={24} color="black" />
         </SettingItem>
 
