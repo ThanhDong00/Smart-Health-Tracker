@@ -26,9 +26,6 @@ function RootLayoutNav() {
   const router = useRouter();
 
   useEffect(() => {
-    console.log("Auth state:", { isAuthenticated, isLoading, isInitialized });
-    console.log("Current segments:", segments);
-
     if (!isInitialized) {
       console.log("Not initialized yet, waiting...");
       return;
@@ -36,8 +33,6 @@ function RootLayoutNav() {
 
     const inAuthGroup = segments[0] === "(tabs)";
     const inAuthPages = segments[0] === "auth" || segments[0] === "welcome";
-
-    console.log("Route check:", { inAuthGroup, inAuthPages });
 
     // Chỉ redirect khi:
     // 1. User đã authenticated nhưng đang ở trang auth/welcome
