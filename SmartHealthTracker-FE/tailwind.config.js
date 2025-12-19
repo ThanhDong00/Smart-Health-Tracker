@@ -23,6 +23,23 @@ module.exports = {
         dark_cardBackground: "#374151",
         dark_textPrimary: "#F9FAFB",
         dark_textSecondary: "#D1D5DB",
+
+        // Light theme
+        "background-light": "#f8fafc",
+        "surface-light": "#ffffff",
+        "card-light": "#f1f5f9",
+        "text-dark": "#1e293b",
+        "text-muted": "#64748b",
+        "surface-hover-light": "#e2e8f0",
+
+        // Dark theme
+        "background-dark": "#0f0f23",
+        "surface-dark": "#1e1e2e",
+        "text-primary": "#cdd6f4",
+        "text-secondary": "#a6adc8",
+        "text-disabled": "#45475a",
+        "surface-variant-dark": "#313244",
+        "surface-variant-hover-dark": "#45475a",
       },
     },
   },
