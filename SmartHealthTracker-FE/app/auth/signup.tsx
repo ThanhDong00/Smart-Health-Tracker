@@ -1,11 +1,15 @@
 import PasswordInput from "@/components/password-input";
 import PrimaryButton from "@/components/primary-button";
+import InputField from "@/components/ui/input-field";
 import { useAuth } from "@/hooks/useAuth";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router, Stack } from "expo-router";
 import { useState } from "react";
-import { Alert, Pressable, Text, TextInput, View } from "react-native";
+import { Alert, Pressable, Text, useColorScheme, View } from "react-native";
 
 export default function SignupScreen() {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
   const { signUp, isLoading } = useAuth();
   const [signupForm, setSignupForm] = useState({
     email: "",
@@ -53,33 +57,56 @@ export default function SignupScreen() {
           headerShown: true,
           headerTitle: "",
           headerShadowVisible: false,
+          headerStyle: {
+            backgroundColor: isDark ? "#1a1a1a" : "#f8fafc",
+          },
+          headerTintColor: isDark ? "#ffffff" : "#1e293b",
+          headerTitleStyle: {
+            fontWeight: "bold",
+          },
         }}
       />
 
-      <View className="flex-1 bg-white p-8 gap-4 justify-between">
+      <View
+        className={`flex-1 p-8 gap-4 justify-between ${
+          isDark ? "bg-background-dark" : "bg-background-light"
+        }`}
+      >
         {/* Welcome text */}
         <View>
-          <Text className="text-3xl font-bold">Join Health Tracker Today</Text>
-          <Text className="text-base font-light py-2">
+          <Text
+            className={`text-3xl font-bold ${
+              isDark ? "text-text-primary" : "text-text-dark"
+            }`}
+          >
+            Join Health Tracker Today
+          </Text>
+          <Text
+            className={`text-base font-light py-2 ${
+              isDark ? "text-text-secondary" : "text-text-muted"
+            }`}
+          >
             Create your account to get started!
           </Text>
         </View>
 
         {/* Sign up form */}
-        <View>
-          <Text className="text-sm font-medium mb-1">Email</Text>
-          <View className="flex-row items-center bg-light_inputBackground dark:bg-dark_inputBackground rounded-lg px-4 mb-4">
-            <TextInput
-              className="flex-1 py-3 pr-3 text-base"
-              placeholder="Enter your email"
-              placeholderTextColor="#aaa"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-              value={signupForm.email}
-              onChangeText={updateForm("email")}
-            />
-          </View>
+        <View className="gap-4">
+          <InputField
+            headIcon={
+              <MaterialIcons
+                name="mail"
+                size={24}
+                color={isDark ? "#00b894" : "#7f27ff"}
+              />
+            }
+            label="Email"
+            placeholder="Enter your email"
+            keyboardType="email-address"
+            value={signupForm.email}
+            onChange={updateForm("email")}
+            isDark={isDark}
+          />
 
           <PasswordInput
             label="Password"
@@ -88,6 +115,7 @@ export default function SignupScreen() {
             visible={isPasswordVisible}
             onToggle={() => setIsPasswordVisible(!isPasswordVisible)}
             placeholder="Enter your password"
+            isDark={isDark}
           />
 
           <PasswordInput
@@ -97,6 +125,7 @@ export default function SignupScreen() {
             visible={confirmPasswordVisible}
             onToggle={() => setConfirmPasswordVisible(!confirmPasswordVisible)}
             placeholder="Re-enter your password"
+            isDark={isDark}
           />
         </View>
 
@@ -107,12 +136,17 @@ export default function SignupScreen() {
               title={isLoading ? "Creating Account..." : "Sign Up"}
               onPress={handleSignUp}
               disabled={isLoading}
+              isDark={isDark}
             />
           </View>
 
           {/* Sign in link */}
           <View className="flex-row justify-center items-center">
-            <Text className="text-sm text-gray-600">
+            <Text
+              className={`text-sm ${
+                isDark ? "text-text-secondary" : "text-gray-600"
+              }`}
+            >
               Already have an account?
             </Text>
 
@@ -121,14 +155,34 @@ export default function SignupScreen() {
                 router.replace("/auth/login");
               }}
             >
-              <Text className="text-sm underline ml-1">Sign in</Text>
+              <Text
+                className={`text-sm underline ml-1 ${
+                  isDark ? "text-primary-dark" : "text-primary"
+                }`}
+              >
+                Sign in
+              </Text>
             </Pressable>
           </View>
 
           <View className="flex-row items-center">
-            <View className="flex-1 bg-black shrink-0 h-[1px] w-full" />
-            <Text className="text-muted-foreground px-4 text-sm">or</Text>
-            <View className="flex-1 bg-black shrink-0 h-[1px] w-full" />
+            <View
+              className={`flex-1 shrink-0 h-[1px] w-full ${
+                isDark ? "bg-surface-variant-dark" : "bg-gray-300"
+              }`}
+            />
+            <Text
+              className={`px-4 text-sm ${
+                isDark ? "text-text-secondary" : "text-text-muted"
+              }`}
+            >
+              or
+            </Text>
+            <View
+              className={`flex-1 shrink-0 h-[1px] w-full ${
+                isDark ? "bg-surface-variant-dark" : "bg-gray-300"
+              }`}
+            />
           </View>
         </View>
       </View>

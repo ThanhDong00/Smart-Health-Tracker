@@ -3,9 +3,11 @@ import { Text, TouchableOpacity } from "react-native";
 export default function SecondaryButton({
   title,
   onPress,
+  isDark = false,
 }: {
   title: string;
   onPress: () => void;
+  isDark?: boolean;
 }) {
   return (
     <TouchableOpacity
