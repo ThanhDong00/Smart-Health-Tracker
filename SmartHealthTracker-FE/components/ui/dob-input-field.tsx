@@ -8,6 +8,7 @@ type DobInputFieldProps = {
   value?: Date;
   onChange?: (data: Date) => void;
   isDisabled?: boolean;
+  isDark?: boolean;
 };
 
 const DobInputField = ({
@@ -16,6 +17,7 @@ const DobInputField = ({
   value,
   onChange,
   isDisabled = false,
+  isDark = false,
 }: DobInputFieldProps) => {
   const [isVisible, setIsVisible] = useState(false);
 
@@ -32,7 +34,15 @@ const DobInputField = ({
   return (
     <View>
       <Text
-        className={`text-sm font-semibold mb-1 ml-1 ${isDisabled ? "text-gray-400" : ""}`}
+        className={`text-sm font-semibold mb-1 ml-1 ${
+          isDisabled
+            ? isDark
+              ? "text-text-disabled"
+              : "text-gray-400"
+            : isDark
+            ? "text-text-primary"
+            : "text-text-dark"
+        }`}
       >
         {" "}
         {label}{" "}
@@ -41,13 +51,25 @@ const DobInputField = ({
         <View
           className={`flex-row items-center gap-3 rounded-lg px-4 h-12 border ${
             isDisabled
-              ? "bg-gray-100 dark:bg-gray-800 border-gray-200 dark:border-gray-700 opacity-60"
-              : "bg-light_inputBackground dark:bg-dark_inputBackground border-gray-300"
+              ? isDark
+                ? "bg-surface-variant-dark border-surface-variant-hover-dark opacity-60"
+                : "bg-gray-100 border-gray-200 opacity-60"
+              : isDark
+              ? "bg-surface-dark border-surface-variant-dark"
+              : "bg-card-light border-gray-300"
           }`}
         >
           {headIcon}
           <TextInput
-            className={`flex-1 ${isDisabled ? "text-gray-500" : ""}`}
+            className={`flex-1 ${
+              isDisabled
+                ? isDark
+                  ? "text-text-disabled"
+                  : "text-gray-500"
+                : isDark
+                ? "text-text-primary"
+                : "text-text-dark"
+            }`}
             editable={false}
             pointerEvents="none"
             value={selectedDateString}
