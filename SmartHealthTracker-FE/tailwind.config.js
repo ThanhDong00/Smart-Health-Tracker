@@ -40,6 +40,16 @@ module.exports = {
         "text-disabled": "#45475a",
         "surface-variant-dark": "#313244",
         "surface-variant-hover-dark": "#45475a",
+
+        // Destructive colors for delete button
+        "destructive-dark": "#1e1b22",
+        "destructive-light": "#ef44441a",
+        "destructive-hover-dark": "#2a2330",
+        "destructive-hover-light": "#ef444426",
+        destructive: "#ef4444",
+
+        // Primary variants
+        "primary-dark": "#00b894",
       },
     },
   },

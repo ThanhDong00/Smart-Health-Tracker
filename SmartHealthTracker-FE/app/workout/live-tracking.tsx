@@ -2,11 +2,20 @@ import LocationService from "@/services/location.service";
 import { TrackingUtils } from "@/utils/TrackingUtils";
 import { Stack } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { Alert, Platform, Text, TouchableOpacity, View } from "react-native";
+import {
+  Alert,
+  Platform,
+  Text,
+  TouchableOpacity,
+  useColorScheme,
+  View,
+} from "react-native";
 import MapView, { Marker, Polyline, PROVIDER_DEFAULT } from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function LiveTrackingScreen() {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
   const mapRef = useRef<MapView | null>(null);
 
   const [isTracking, setIsTracking] = useState(false);
@@ -206,10 +215,22 @@ export default function LiveTrackingScreen() {
           headerShown: true,
           title: "Live Workout Tracking",
           headerTitleAlign: "center",
+          headerTitleStyle: {
+            fontWeight: "bold",
+          },
+          headerShadowVisible: false,
+          headerStyle: {
+            backgroundColor: isDark ? "#1a1a1a" : "#f8fafc",
+          },
+          headerTintColor: isDark ? "#ffffff" : "#1e293b",
         }}
       />
 
-      <View className="flex-1 bg-background">
+      <View
+        className={`flex-1 ${
+          isDark ? "bg-background-dark" : "bg-background-light"
+        }`}
+      >
         <MapView
           ref={mapRef}
           provider={PROVIDER_DEFAULT}
@@ -232,7 +253,7 @@ export default function LiveTrackingScreen() {
           {coordinates.length > 1 && (
             <Polyline
               coordinates={coordinates}
-              strokeColor="#FF0000"
+              strokeColor={isDark ? "#00d4aa" : "#7f27ff"}
               strokeWidth={4}
             />
           )}
@@ -258,74 +279,100 @@ export default function LiveTrackingScreen() {
 
         {/* Thống kê */}
         <View
-          className={`
-        absolute 
-        ${Platform.OS === "ios" ? "top-16" : "bottom-28"} 
-        left-5 right-5
-        bg-white/95 
-        rounded-3xl 
-        p-4 
-        flex-row 
-        flex-wrap 
-        justify-between 
-        shadow-lg 
-        shadow-black/25 
-        ios:shadow-[0_2px_4px_rgba(0,0,0,0.25)]
-        android:elevation-5
-      `}
+          className={`absolute ${Platform.OS === "ios" ? "top-16" : "bottom-28"} left-5 right-5 rounded-3xl p-4 flex-row flex-wrap justify-between ${
+            isDark
+              ? "bg-surface-dark/95 shadow-lg"
+              : "bg-white/95 shadow-md"
+          }`}
+          style={{
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: isDark ? 0.5 : 0.25,
+            shadowRadius: 4,
+            elevation: 5,
+          }}
         >
           <View className="w-[48%] mb-2.5">
-            <Text className="text-xs text-gray-600 mb-1">Distance</Text>
-            <Text className="text-xl font-bold text-black">
+            <Text
+              className={`text-xs mb-1 ${
+                isDark ? "text-text-secondary" : "text-gray-600"
+              }`}
+            >
+              Distance
+            </Text>
+            <Text
+              className={`text-xl font-bold ${
+                isDark ? "text-text-primary" : "text-black"
+              }`}
+            >
               {TrackingUtils.formatDistance(distance)} km
             </Text>
           </View>
 
           <View className="w-[48%] mb-2.5">
-            <Text className="text-xs text-gray-600 mb-1">Time</Text>
-            <Text className="text-xl font-bold text-black">
+            <Text
+              className={`text-xs mb-1 ${
+                isDark ? "text-text-secondary" : "text-gray-600"
+              }`}
+            >
+              Time
+            </Text>
+            <Text
+              className={`text-xl font-bold ${
+                isDark ? "text-text-primary" : "text-black"
+              }`}
+            >
               {TrackingUtils.formatTime(duration)}
             </Text>
           </View>
 
           <View className="w-[48%] mb-2.5">
-            <Text className="text-xs text-gray-600 mb-1">Pace</Text>
-            <Text className="text-xl font-bold text-black">
+            <Text
+              className={`text-xs mb-1 ${
+                isDark ? "text-text-secondary" : "text-gray-600"
+              }`}
+            >
+              Pace
+            </Text>
+            <Text
+              className={`text-xl font-bold ${
+                isDark ? "text-text-primary" : "text-black"
+              }`}
+            >
               {TrackingUtils.calculatePace(distance, duration)} /km
             </Text>
           </View>
 
           <View className="w-[48%]">
-            <Text className="text-xs text-gray-600 mb-1">Speed</Text>
-            <Text className="text-xl font-bold text-black">
+            <Text
+              className={`text-xs mb-1 ${
+                isDark ? "text-text-secondary" : "text-gray-600"
+              }`}
+            >
+              Speed
+            </Text>
+            <Text
+              className={`text-xl font-bold ${
+                isDark ? "text-text-primary" : "text-black"
+              }`}
+            >
               {currentSpeed.toFixed(1)} km/h
             </Text>
           </View>
         </View>
 
         {/* Control buttons */}
-        <View
-          className="
-        absolute 
-        bottom-10 
-        left-5 right-5 
-        flex-row 
-        justify-around
-      "
-        >
+        <View className="absolute bottom-10 left-5 right-5 flex-row justify-around">
           {!isTracking ? (
             <TouchableOpacity
-              className="
-              py-4 px-8 
-              rounded-3xl 
-              min-w-[120px] 
-              items-center 
-              shadow-lg 
-              shadow-black/25 
-              ios:shadow-[0_2px_4px_rgba(0,0,0,0.25)]
-              android:elevation-5
-              bg-green-500
-            "
+              className="py-4 px-8 rounded-3xl min-w-[120px] items-center bg-green-500"
+              style={{
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.25,
+                shadowRadius: 4,
+                elevation: 5,
+              }}
               onPress={startTracking}
             >
               <Text className="text-white text-base font-bold">Start</Text>
@@ -334,34 +381,28 @@ export default function LiveTrackingScreen() {
             <>
               {!isPaused ? (
                 <TouchableOpacity
-                  className="
-                  py-4 px-8 
-                  rounded-3xl 
-                  min-w-[120px] 
-                  items-center 
-                  shadow-lg 
-                  shadow-black/25 
-                  ios:shadow-[0_2px_4px_rgba(0,0,0,0.25)]
-                  android:elevation-5
-                  bg-orange-500
-                "
+                  className="py-4 px-8 rounded-3xl min-w-[120px] items-center bg-orange-500"
+                  style={{
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.25,
+                    shadowRadius: 4,
+                    elevation: 5,
+                  }}
                   onPress={pauseTracking}
                 >
                   <Text className="text-white text-base font-bold">Pause</Text>
                 </TouchableOpacity>
               ) : (
                 <TouchableOpacity
-                  className="
-                  py-4 px-8 
-                  rounded-3xl 
-                  min-w-[120px] 
-                  items-center 
-                  shadow-lg 
-                  shadow-black/25 
-                  ios:shadow-[0_2px_4px_rgba(0,0,0,0.25)]
-                  android:elevation-5
-                  bg-blue-500
-                "
+                  className="py-4 px-8 rounded-3xl min-w-[120px] items-center bg-blue-500"
+                  style={{
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.25,
+                    shadowRadius: 4,
+                    elevation: 5,
+                  }}
                   onPress={resumeTracking}
                 >
                   <Text className="text-white text-base font-bold">Resume</Text>
@@ -369,17 +410,14 @@ export default function LiveTrackingScreen() {
               )}
 
               <TouchableOpacity
-                className="
-                py-4 px-8 
-                rounded-3xl 
-                min-w-[120px] 
-                items-center 
-                shadow-lg 
-                shadow-black/25 
-                ios:shadow-[0_2px_4px_rgba(0,0,0,0.25)]
-                android:elevation-5
-                bg-red-500
-              "
+                className="py-4 px-8 rounded-3xl min-w-[120px] items-center bg-red-500"
+                style={{
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.25,
+                  shadowRadius: 4,
+                  elevation: 5,
+                }}
                 onPress={stopTracking}
               >
                 <Text className="text-white text-base font-bold">Finish</Text>

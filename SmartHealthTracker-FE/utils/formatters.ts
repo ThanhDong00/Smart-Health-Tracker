@@ -44,3 +44,20 @@ export const getDateString = (date: Date): string => {
     "0"
   )}-${String(date.getDate()).padStart(2, "0")}`;
 };
+
+export const formatSpeed = (mps: number): string => {
+  return ((mps * 3600) / 1000).toFixed(1);
+};
+
+export const formatDateTimeFull = (isoString: string): string => {
+  const date = new Date(isoString);
+  return date.toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+};

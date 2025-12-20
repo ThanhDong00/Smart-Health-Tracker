@@ -7,8 +7,10 @@ import {
   ScrollView,
   Text,
   TouchableOpacity,
+  useColorScheme,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import PrimaryButton from "@/components/primary-button";
 import DobInputField from "@/components/ui/dob-input-field";
@@ -47,6 +49,8 @@ const AvatarSection = ({ onEdit }: { onEdit: () => void }) => (
 );
 
 export default function PersonalInforScreen() {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
   const { profile, setProfile } = useUserStore();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -167,17 +171,30 @@ export default function PersonalInforScreen() {
   };
 
   return (
-    <>
+    <SafeAreaView
+      className={`flex-1 ${
+        isDark ? "bg-background-dark" : "bg-background-light"
+      }`}
+      edges={["top"]}
+    >
       <Stack.Screen
         options={{
           title: "Personal Information",
           headerShown: true,
           headerTitleAlign: "center",
+          headerTitleStyle: {
+            fontWeight: "bold",
+          },
+          headerShadowVisible: false,
+          headerStyle: {
+            backgroundColor: isDark ? "#1a1a1a" : "#f8fafc",
+          },
+          headerTintColor: isDark ? "#ffffff" : "#1e293b",
         }}
       />
 
       <ScrollView
-        className="flex-1 bg-background px-8"
+        className="flex-1 px-8"
         contentContainerStyle={{ flexGrow: 1, paddingVertical: 32 }}
         showsVerticalScrollIndicator={false}
       >
@@ -187,41 +204,73 @@ export default function PersonalInforScreen() {
           <View className="flex-col gap-6 pb-10">
             {/* Email (read-only) */}
             <InputField
-              headIcon={<MaterialIcons name="mail" size={24} color="black" />}
+              headIcon={
+                <MaterialIcons
+                  name="mail"
+                  size={24}
+                  color={isDark ? "#00b894" : "#7f27ff"}
+                />
+              }
               trailingIcon={
-                <MaterialIcons name="lock-outline" size={24} color="black" />
+                <MaterialIcons
+                  name="lock-outline"
+                  size={24}
+                  color={isDark ? "#a6adc8" : "#64748b"}
+                />
               }
               label="Email"
               value={form.email}
               isDisabled
+              isDark={isDark}
             />
 
             {/* Full Name */}
             <InputField
-              headIcon={<MaterialIcons name="person" size={24} color="black" />}
+              headIcon={
+                <MaterialIcons
+                  name="person"
+                  size={24}
+                  color={isDark ? "#00b894" : "#7f27ff"}
+                />
+              }
               label="Full Name"
               value={form.fullName}
               isDisabled={!isEditing}
               onChange={(text) => updateField("fullName", text)}
+              isDark={isDark}
             />
 
             {/* Date of Birth */}
             <DobInputField
-              headIcon={<MaterialIcons name="cake" size={24} color="black" />}
+              headIcon={
+                <MaterialIcons
+                  name="cake"
+                  size={24}
+                  color={isDark ? "#00b894" : "#7f27ff"}
+                />
+              }
               label="Date of Birth"
               value={form.dateOfBirth}
               onChange={(date) => updateField("dateOfBirth", date)}
               isDisabled={!isEditing}
+              isDark={isDark}
             />
 
             {/* Gender */}
             <SelectedField
-              headIcon={<MaterialIcons name="wc" size={24} color="black" />}
+              headIcon={
+                <MaterialIcons
+                  name="wc"
+                  size={24}
+                  color={isDark ? "#00b894" : "#7f27ff"}
+                />
+              }
               label="Gender"
               options={["Male", "Female", "Other"]}
               value={form.gender}
               onChangeValue={(value) => updateField("gender", value)}
               isDisabled={!isEditing}
+              isDark={isDark}
             />
 
             {/* Height & Weight */}
@@ -229,16 +278,27 @@ export default function PersonalInforScreen() {
               <View className="flex-1">
                 <InputField
                   headIcon={
-                    <MaterialIcons name="height" size={24} color="black" />
+                    <MaterialIcons
+                      name="height"
+                      size={24}
+                      color={isDark ? "#00b894" : "#7f27ff"}
+                    />
                   }
                   trailingIcon={
-                    <Text className="text-sm font-semibold">cm</Text>
+                    <Text
+                      className={`text-sm font-semibold ${
+                        isDark ? "text-text-secondary" : "text-text-muted"
+                      }`}
+                    >
+                      cm
+                    </Text>
                   }
                   label="Height"
                   keyboardType="numeric"
                   value={form.height}
                   isDisabled={!isEditing}
                   onChange={(text) => updateField("height", text)}
+                  isDark={isDark}
                 />
               </View>
 
@@ -248,17 +308,24 @@ export default function PersonalInforScreen() {
                     <MaterialIcons
                       name="monitor-weight"
                       size={24}
-                      color="black"
+                      color={isDark ? "#00b894" : "#7f27ff"}
                     />
                   }
                   trailingIcon={
-                    <Text className="text-sm font-semibold">kg</Text>
+                    <Text
+                      className={`text-sm font-semibold ${
+                        isDark ? "text-text-secondary" : "text-text-muted"
+                      }`}
+                    >
+                      kg
+                    </Text>
                   }
                   label="Weight"
                   keyboardType="numeric"
                   value={form.weight}
                   isDisabled={!isEditing}
                   onChange={(text) => updateField("weight", text)}
+                  isDark={isDark}
                 />
               </View>
             </View>
@@ -270,10 +337,11 @@ export default function PersonalInforScreen() {
             title={isEditing ? "Save Changes" : "Edit Profile"}
             onPress={handleButtonPress}
             disabled={isLoading}
+            isDark={isDark}
             // isLoading={isLoading}
           />
         </View>
       </ScrollView>
-    </>
+    </SafeAreaView>
   );
 }

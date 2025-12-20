@@ -22,7 +22,11 @@ export default function WorkoutStatCard({
         isDark ? "bg-surface-dark shadow-sm" : "bg-card-light shadow-md"
       }`}
     >
-      <MaterialIcons name={icon} size={20} color="#00d4aa" />
+      <MaterialIcons
+        name={icon}
+        size={20}
+        color={isDark ? `#00b894` : `#7f27ff`}
+      />
       <Text
         className={`text-xs mt-2 font-medium ${
           isDark ? "text-text-secondary" : "text-text-muted"

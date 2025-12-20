@@ -82,7 +82,11 @@ export default function WorkoutActivityCard({
 
         <View className="flex-row gap-4 mb-2">
           <View className="flex-row items-center">
-            <MaterialIcons name="timer" size={14} color="#00d4aa" />
+            <MaterialIcons
+              name="timer"
+              size={14}
+              color={isDark ? `#00b894` : `#7f27ff`}
+            />
             <Text
               className={`text-sm ml-1 ${
                 isDark ? "text-text-primary" : "text-text-dark"
@@ -92,7 +96,11 @@ export default function WorkoutActivityCard({
             </Text>
           </View>
           <View className="flex-row items-center">
-            <MaterialIcons name="speed" size={14} color="#00d4aa" />
+            <MaterialIcons
+              name="speed"
+              size={14}
+              color={isDark ? `#00b894` : `#7f27ff`}
+            />
             <Text
               className={`text-sm ml-1 ${
                 isDark ? "text-text-primary" : "text-text-dark"

@@ -1,11 +1,15 @@
 import PasswordInput from "@/components/password-input";
 import PrimaryButton from "@/components/primary-button";
+import InputField from "@/components/ui/input-field";
 import { useAuth } from "@/hooks/useAuth";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router, Stack } from "expo-router";
 import { useState } from "react";
-import { Alert, Pressable, Text, TextInput, View } from "react-native";
+import { Alert, Pressable, Text, useColorScheme, View } from "react-native";
 
 export default function LoginScreen() {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
   const { signIn, isLoading } = useAuth();
   const [signInForm, setSignInForm] = useState({
     email: "",
@@ -38,33 +42,56 @@ export default function LoginScreen() {
           headerShown: true,
           headerTitle: "",
           headerShadowVisible: false,
+          headerStyle: {
+            backgroundColor: isDark ? "#1a1a1a" : "#f8fafc",
+          },
+          headerTintColor: isDark ? "#ffffff" : "#1e293b",
+          headerTitleStyle: {
+            fontWeight: "bold",
+          },
         }}
       />
 
-      <View className="flex-1 bg-white p-8 gap-4 justify-between">
+      <View
+        className={`flex-1 p-8 gap-4 justify-between ${
+          isDark ? "bg-background-dark" : "bg-background-light"
+        }`}
+      >
         {/* Welcome text */}
         <View>
-          <Text className="text-3xl font-bold">Welcome Back!</Text>
-          <Text className="text-base font-light py-2">
+          <Text
+            className={`text-3xl font-bold ${
+              isDark ? "text-text-primary" : "text-text-dark"
+            }`}
+          >
+            Welcome Back!
+          </Text>
+          <Text
+            className={`text-base font-light py-2 ${
+              isDark ? "text-text-secondary" : "text-text-muted"
+            }`}
+          >
             Sign in to continue tracking your health.
           </Text>
         </View>
 
         {/* Form */}
-        <View>
-          <Text className="text-sm font-medium mb-1">Email</Text>
-          <View className="flex-row items-center bg-light_inputBackground dark:bg-dark_inputBackground rounded-lg px-4 mb-4">
-            <TextInput
-              className="flex-1 py-3 pr-3 text-base"
-              placeholder="Enter your email"
-              placeholderTextColor="#aaa"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-              value={signInForm.email}
-              onChangeText={updateForm("email")}
-            />
-          </View>
+        <View className="gap-4">
+          <InputField
+            headIcon={
+              <MaterialIcons
+                name="mail"
+                size={24}
+                color={isDark ? "#00b894" : "#7f27ff"}
+              />
+            }
+            label="Email"
+            placeholder="Enter your email"
+            keyboardType="email-address"
+            value={signInForm.email}
+            onChange={updateForm("email")}
+            isDark={isDark}
+          />
 
           <PasswordInput
             label="Password"
@@ -73,6 +100,7 @@ export default function LoginScreen() {
             visible={isPasswordVisible}
             onToggle={() => setIsPasswordVisible(!isPasswordVisible)}
             placeholder="Enter your password"
+            isDark={isDark}
           />
 
           {/* Remember me & Forgot password */}
@@ -82,19 +110,33 @@ export default function LoginScreen() {
               onPress={() => setRememberMe((prev) => !prev)}
             >
               <View
-                className={`h-5 w-5 rounded border border-gray-400 items-center justify-center ${
-                  rememberMe ? "bg-primary" : "bg-transparent"
+                className={`h-5 w-5 rounded border items-center justify-center ${
+                  rememberMe
+                    ? "bg-primary border-primary"
+                    : isDark
+                      ? "bg-transparent border-text-secondary"
+                      : "bg-transparent border-gray-400"
                 }`}
               >
                 {rememberMe ? (
-                  <Text className="text-white text-xs">✓</Text>
+                  <MaterialIcons name="check" size={16} color="white" />
                 ) : null}
               </View>
-              <Text className="text-sm text-gray-700">Remember me</Text>
+              <Text
+                className={`text-sm ${
+                  isDark ? "text-text-secondary" : "text-gray-700"
+                }`}
+              >
+                Remember me
+              </Text>
             </Pressable>
 
             <Pressable onPress={() => router.push("/auth/forgot")}>
-              <Text className="text-sm text-primary underline">
+              <Text
+                className={`text-sm underline ${
+                  isDark ? "text-primary-dark" : "text-primary"
+                }`}
+              >
                 Forgot password?
               </Text>
             </Pressable>
@@ -108,13 +150,28 @@ export default function LoginScreen() {
               title={isLoading ? "Signing In..." : "Sign In"}
               onPress={handleSignIn}
               disabled={isLoading}
+              isDark={isDark}
             />
           </View>
 
           <View className="flex-row items-center">
-            <View className="flex-1 bg-black shrink-0 h-[1px] w-full" />
-            <Text className="text-muted-foreground px-4 text-sm">or</Text>
-            <View className="flex-1 bg-black shrink-0 h-[1px] w-full" />
+            <View
+              className={`flex-1 shrink-0 h-[1px] w-full ${
+                isDark ? "bg-surface-variant-dark" : "bg-gray-300"
+              }`}
+            />
+            <Text
+              className={`px-4 text-sm ${
+                isDark ? "text-text-secondary" : "text-text-muted"
+              }`}
+            >
+              or
+            </Text>
+            <View
+              className={`flex-1 shrink-0 h-[1px] w-full ${
+                isDark ? "bg-surface-variant-dark" : "bg-gray-300"
+              }`}
+            />
           </View>
         </View>
       </View>

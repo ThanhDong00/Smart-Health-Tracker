@@ -185,7 +185,7 @@ export default function WorkoutScreen() {
       className={`flex-1 ${
         isDark ? "bg-background-dark" : "bg-background-light"
       } p-8`}
-      edges={["left"]}
+      edges={["top"]}
     >
       <Stack.Screen
         options={{

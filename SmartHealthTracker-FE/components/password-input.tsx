@@ -1,4 +1,4 @@
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import { Text, TextInput, View } from "react-native";
 
 const PasswordInput = ({
@@ -8,6 +8,7 @@ const PasswordInput = ({
   visible,
   onToggle,
   placeholder,
+  isDark = false,
 }: {
   label: string;
   value: string;
@@ -15,26 +16,46 @@ const PasswordInput = ({
   visible: boolean;
   onToggle: () => void;
   placeholder: string;
+  isDark?: boolean;
 }) => {
   return (
-    <View className="mb-4">
-      <Text className="text-sm font-medium mb-1">{label}</Text>
-      <View className="flex-row items-center bg-light_inputBackground dark:bg-dark_inputBackground rounded-lg px-4">
+    <View className="">
+      <Text
+        className={`text-sm font-semibold mb-1 ml-1 ${
+          isDark ? "text-text-primary" : "text-text-dark"
+        }`}
+      >
+        {label}
+      </Text>
+      <View
+        className={`flex-row items-center gap-3 rounded-lg px-4 h-12 border ${
+          isDark
+            ? "bg-surface-dark border-surface-variant-dark"
+            : "bg-card-light border-gray-300"
+        }`}
+      >
+        <MaterialIcons
+          name="lock"
+          size={24}
+          color={isDark ? "#00b894" : "#7f27ff"}
+        />
+
         <TextInput
-          className="flex-1 py-3 pr-3 text-base"
+          className={`flex-1 ${
+            isDark ? "text-text-primary" : "text-text-dark"
+          }`}
           secureTextEntry={!visible}
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
-          placeholderTextColor="#aaa"
+          placeholderTextColor={isDark ? "#45475a" : "#9ca3af"}
           autoCapitalize="none"
         />
         <MaterialCommunityIcons
           name={visible ? "eye-off" : "eye"}
           size={24}
-          color="#6b7280"
+          color={isDark ? "#a6adc8" : "#64748b"}
           onPress={onToggle}
-          style={{ marginLeft: 10 }}
         />
       </View>
     </View>

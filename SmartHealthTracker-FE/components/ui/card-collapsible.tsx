@@ -1,48 +1,50 @@
-import { Colors } from "@/constants/theme";
-import { useColorScheme } from "@/hooks/use-color-scheme.web";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { PropsWithChildren } from "react";
 import { Text, View } from "react-native";
-import { IconSymbol } from "./icon-symbol";
 
 export function CardCollapsible({
   children,
   title,
   subtitle,
-  icon = "house.fill",
+  icon = "home",
+  isDark,
 }: PropsWithChildren & {
   title: string;
   subtitle: string;
-  icon?: any;
+  icon?: keyof typeof MaterialIcons.glyphMap;
+  isDark: boolean;
 }) {
-  const colorScheme = useColorScheme() ?? "light";
-
   return (
-    <View className="bg-white p-4 rounded-2xl shadow-md ">
+    <View
+      className={`rounded-2xl p-4 ${
+        isDark ? "bg-surface-dark shadow-lg" : "bg-card-light shadow-md"
+      }`}
+    >
       <View className="flex-row items-center gap-4">
-        <View className=" bg-secondary rounded-full p-2">
-          <IconSymbol
-            size={32}
-            name={icon}
-            color={Colors[colorScheme ?? "light"].primary}
-          />
+        <MaterialIcons
+          name={icon}
+          size={32}
+          color={isDark ? `#00b894` : `#7f27ff`}
+        />
+        <View className="flex-1">
+          <Text
+            className={`text-lg font-semibold ${
+              isDark ? "text-text-primary" : "text-text-dark"
+            }`}
+          >
+            {title}
+          </Text>
+          <Text
+            className={`text-sm ${
+              isDark ? "text-text-secondary" : "text-text-muted"
+            }`}
+          >
+            {subtitle}
+          </Text>
         </View>
-        <View>
-          <Text className="text-lg font-semibold">{title}</Text>
-          <Text>{subtitle}</Text>
-        </View>
-        {/* <TouchableOpacity
-          onPress={() => setIsOpen(!isOpen)}
-          className="ml-auto p-2"
-        >
-          <IconSymbol
-            size={24}
-            name={isOpen ? "chevron.up" : "chevron.down"}
-            color={Colors[colorScheme ?? "light"].tint}
-          />
-        </TouchableOpacity> */}
       </View>
 
-      <View className="mt-4 gap-4">{children}</View>
+      {children && <View className="mt-4">{children}</View>}
     </View>
   );
 }
