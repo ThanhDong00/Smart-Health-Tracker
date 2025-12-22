@@ -1,7 +1,9 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import * as ImagePicker from "expo-image-picker";
 import { Stack } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Image,
   ScrollView,
@@ -16,6 +18,7 @@ import PrimaryButton from "@/components/primary-button";
 import DobInputField from "@/components/ui/dob-input-field";
 import InputField from "@/components/ui/input-field";
 import SelectedField from "@/components/ui/selected-field";
+import { CloudinaryService } from "@/services/cloudinary.service";
 import { UserService } from "@/services/user.service";
 import { useUserStore } from "@/store/user.store";
 
@@ -28,19 +31,36 @@ type FormState = {
   weight: string;
 };
 
-const AvatarSection = ({ onEdit }: { onEdit: () => void }) => (
+const AvatarSection = ({
+  avatarUrl,
+  onEdit,
+  isUploading,
+}: {
+  avatarUrl?: string;
+  onEdit: () => void;
+  isUploading: boolean;
+}) => (
   <View className="flex-col items-center justify-center pt-2 pb-8">
     <View className="relative">
       <View className="w-28 h-28 rounded-full items-center justify-center overflow-hidden border-2 border-background-dark shadow-lg">
-        <Image
-          source={{ uri: "https://i.pravatar.cc/300" }}
-          className="w-full h-full"
-          resizeMode="cover"
-        />
+        {isUploading ? (
+          <View className="w-full h-full items-center justify-center bg-gray-200 dark:bg-gray-700">
+            <ActivityIndicator size="large" color="#00b894" />
+          </View>
+        ) : (
+          <Image
+            source={{
+              uri: avatarUrl || "https://i.pravatar.cc/300",
+            }}
+            className="w-full h-full"
+            resizeMode="cover"
+          />
+        )}
       </View>
       <TouchableOpacity
         className="absolute bottom-0 right-0 bg-primary p-2 rounded-full border-2 border-background-dark shadow-md active:bg-accent-green"
         onPress={onEdit}
+        disabled={isUploading}
       >
         <MaterialIcons name="camera-alt" size={12} color="white" />
       </TouchableOpacity>
@@ -54,6 +74,7 @@ export default function PersonalInforScreen() {
   const { profile, setProfile } = useUserStore();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [form, setForm] = useState<FormState>({
     email: "",
     fullName: "",
@@ -124,6 +145,76 @@ export default function PersonalInforScreen() {
     return true;
   };
 
+  const handleAvatarUpload = async () => {
+    try {
+      // Request permission
+      const permissionResult =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+      if (!permissionResult.granted) {
+        Alert.alert(
+          "Permission Required",
+          "Please allow access to your photo library to upload an avatar"
+        );
+        return;
+      }
+
+      // Launch image picker
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: "images" as any,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (result.canceled) {
+        return;
+      }
+
+      const imageUri = result.assets[0].uri;
+
+      // Validate image size (< 5MB)
+      const isValidSize = await CloudinaryService.validateImageSize(
+        imageUri,
+        5
+      );
+
+      if (!isValidSize) {
+        Alert.alert(
+          "File Too Large",
+          "Please select an image smaller than 5MB"
+        );
+        return;
+      }
+
+      // Upload to Cloudinary
+      setIsUploadingAvatar(true);
+      const avatarUrl = await CloudinaryService.uploadImage(
+        imageUri,
+        "smarthealth"
+      );
+
+      // Update avatar via API
+      const response = await UserService.updateAvatar({ avatarUrl });
+
+      if (response.status === 200) {
+        // Update profile in store
+        setProfile(response.data);
+        Alert.alert("Success", "Avatar updated successfully");
+      } else {
+        Alert.alert("Error", response.message || "Failed to update avatar");
+      }
+    } catch (error: any) {
+      console.error("Avatar upload error:", error);
+      Alert.alert(
+        "Upload Failed",
+        error.message || "An error occurred while uploading the avatar"
+      );
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
+
   const handleSave = async () => {
     if (!validateForm()) {
       return;
@@ -147,7 +238,6 @@ export default function PersonalInforScreen() {
         setProfile(response.data);
         setIsEditing(false);
 
-        console.log("======Profile in store after update:", profile);
         Alert.alert("Success", "Profile updated successfully");
       } else {
         Alert.alert("Error", response.message || "Failed to update profile");
@@ -169,6 +259,10 @@ export default function PersonalInforScreen() {
       setIsEditing(true);
     }
   };
+
+  useEffect(() => {
+    console.log("Profile changed:", profile);
+  }, [profile]);
 
   return (
     <SafeAreaView
@@ -199,7 +293,11 @@ export default function PersonalInforScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View className="flex-1">
-          <AvatarSection onEdit={() => {}} />
+          <AvatarSection
+            avatarUrl={profile?.avatarUrl}
+            onEdit={handleAvatarUpload}
+            isUploading={isUploadingAvatar}
+          />
 
           <View className="flex-col gap-6 pb-10">
             {/* Email (read-only) */}

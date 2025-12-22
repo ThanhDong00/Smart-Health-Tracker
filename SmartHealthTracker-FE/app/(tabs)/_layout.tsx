@@ -7,7 +7,6 @@ import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 
 import Feather from "@expo/vector-icons/Feather";
-import FontAwesome from "@expo/vector-icons/FontAwesome";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
@@ -23,12 +22,7 @@ export default function TabLayout() {
         headerTitleAlign: "center",
         headerLeft: () => {
           return (
-            <FontAwesome
-              name="heartbeat"
-              size={32}
-              color="red"
-              className="px-4"
-            />
+            <MaterialIcons name="code" size={32} color="red" className="px-4" />
           );
         },
         headerRight: () => {
