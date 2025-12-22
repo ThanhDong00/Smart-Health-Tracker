@@ -160,7 +160,7 @@ export default function ActivityDetailScreen() {
           headerShown: true,
           title: "Activity Details",
           headerStyle: {
-            backgroundColor: isDark ? "#1a1a1a" : "#f8fafc",
+            backgroundColor: isDark ? "#0f0f23" : "#f8fafc",
           },
           headerTintColor: isDark ? "#ffffff" : "#1e293b",
           headerTitleStyle: {

@@ -37,7 +37,7 @@ function RootLayoutNav() {
     // Chỉ redirect khi:
     // 1. User đã authenticated nhưng đang ở trang auth/welcome
     // 2. User chưa authenticated nhưng đang ở (tabs)
-    if (isAuthenticated && (inAuthPages || segments.length === 0)) {
+    if (isAuthenticated && inAuthPages) {
       console.log("Authenticated user, redirecting to tabs");
       router.replace("/(tabs)");
     } else if (!isAuthenticated && inAuthGroup) {

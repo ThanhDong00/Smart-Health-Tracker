@@ -1,5 +1,6 @@
 import { CardCollapsible } from "@/components/ui/card-collapsible";
 import ProgressBar from "@/components/ui/progress-bar-h";
+import SedentaryReminder from "@/components/ui/sedentary-reminder";
 import SleepBarChart from "@/components/ui/sleep-bar-chart";
 import { useTheme } from "@/hooks/useTheme";
 import { Stack } from "expo-router";
@@ -25,7 +26,7 @@ export default function HomeScreen() {
           },
           headerShadowVisible: false,
           headerStyle: {
-            backgroundColor: isDark ? "#1a1a1a" : "#f8fafc",
+            backgroundColor: isDark ? "#0f0f23" : "#f8fafc",
           },
           headerTintColor: isDark ? "#ffffff" : "#1e293b",
         }}
@@ -54,6 +55,9 @@ export default function HomeScreen() {
         </View>
 
         <View className="gap-4">
+          {/* Sedentary Clock */}
+          <SedentaryReminder isDark={isDark} />
+
           {/* Walk */}
           <CardCollapsible
             title="Daily Walking"
