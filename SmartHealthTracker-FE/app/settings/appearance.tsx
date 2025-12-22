@@ -1,27 +1,24 @@
 import MenuSection from "@/components/ui/account/menu-section";
+import { useTheme } from "@/hooks/useTheme";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { Stack } from "expo-router";
-import { useCallback, useMemo, useRef, useState } from "react";
-import { Text, TouchableOpacity, useColorScheme, View } from "react-native";
+import { useCallback, useMemo, useRef } from "react";
+import { Text, TouchableOpacity, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function AppearanceScreen() {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
-  const [selectedTheme, setSelectedTheme] = useState<
-    "light" | "dark" | "system"
-  >("light");
+  const { isDark, theme, setTheme } = useTheme();
   const bottomSheetRef = useRef<BottomSheet>(null);
-  const snapPoints = useMemo(() => ["25%", "40%"], []);
+  const snapPoints = useMemo(() => ["25%", "30%"], []);
 
   const handleSheetChanges = useCallback((index: number) => {
     console.log("handleSheetChanges", index);
   }, []);
 
-  const handleThemeSelect = (theme: "light" | "dark" | "system") => {
-    setSelectedTheme(theme);
+  const handleThemeSelect = (selectedTheme: "light" | "dark") => {
+    setTheme(selectedTheme);
     bottomSheetRef.current?.close();
   };
 
@@ -71,7 +68,7 @@ export default function AppearanceScreen() {
                     isDark ? "text-text-secondary" : "text-text-muted"
                   }`}
                 >
-                  {selectedTheme}
+                  {theme}
                 </Text>
                 <MaterialIcons
                   name="chevron-right"
@@ -149,31 +146,7 @@ export default function AppearanceScreen() {
                 >
                   Light
                 </Text>
-                {selectedTheme === "light" && (
-                  <MaterialIcons
-                    name="check"
-                    size={24}
-                    color={isDark ? "#00b894" : "#7f27ff"}
-                  />
-                )}
-              </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              className={`py-4 border-b ${
-                isDark ? "border-surface-variant-dark" : "border-gray-200"
-              }`}
-              onPress={() => handleThemeSelect("dark")}
-            >
-              <View className="flex-row items-center justify-between">
-                <Text
-                  className={`text-base ${
-                    isDark ? "text-text-primary" : "text-text-dark"
-                  }`}
-                >
-                  Dark
-                </Text>
-                {selectedTheme === "dark" && (
+                {theme === "light" && (
                   <MaterialIcons
                     name="check"
                     size={24}
@@ -185,7 +158,7 @@ export default function AppearanceScreen() {
 
             <TouchableOpacity
               className="py-4"
-              onPress={() => handleThemeSelect("system")}
+              onPress={() => handleThemeSelect("dark")}
             >
               <View className="flex-row items-center justify-between">
                 <Text
@@ -193,9 +166,9 @@ export default function AppearanceScreen() {
                     isDark ? "text-text-primary" : "text-text-dark"
                   }`}
                 >
-                  System
+                  Dark
                 </Text>
-                {selectedTheme === "system" && (
+                {theme === "dark" && (
                   <MaterialIcons
                     name="check"
                     size={24}

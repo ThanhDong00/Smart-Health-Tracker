@@ -1,13 +1,13 @@
 import { CardCollapsible } from "@/components/ui/card-collapsible";
 import ProgressBar from "@/components/ui/progress-bar-h";
 import SleepBarChart from "@/components/ui/sleep-bar-chart";
+import { useTheme } from "@/hooks/useTheme";
 import { Stack } from "expo-router";
-import { ScrollView, Text, useColorScheme, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HomeScreen() {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
+  const { isDark } = useTheme();
 
   return (
     <SafeAreaView

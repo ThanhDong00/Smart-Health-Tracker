@@ -1,3 +1,4 @@
+import { useTheme } from "@/hooks/useTheme";
 import {
   formatDateTimeFull,
   formatDistance,
@@ -7,13 +8,7 @@ import {
 } from "@/utils/formatters";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import {
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  useColorScheme,
-  View,
-} from "react-native";
+import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 // Mock data (same as workout.tsx - in production, fetch from storage)
@@ -107,8 +102,7 @@ const mockActivities = [
 export default function ActivityDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
+  const { isDark } = useTheme();
 
   const activity = mockActivities.find((a) => a.id === id);
 

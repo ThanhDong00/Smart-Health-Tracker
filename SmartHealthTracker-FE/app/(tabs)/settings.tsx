@@ -1,15 +1,15 @@
 import MenuSection from "@/components/ui/account/menu-section";
 import SettingItem from "@/components/ui/account/setting-item";
 import { useAuth } from "@/hooks/useAuth";
+import { useTheme } from "@/hooks/useTheme";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router, Stack } from "expo-router";
-import { Alert, ScrollView, useColorScheme, View } from "react-native";
+import { Alert, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function SettingsScreen() {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
+  const { isDark } = useTheme();
   const { signOut, isLoading } = useAuth();
 
   const logoutHandle = () => {

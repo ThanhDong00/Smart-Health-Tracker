@@ -1,21 +1,14 @@
+import { useTheme } from "@/hooks/useTheme";
 import LocationService from "@/services/location.service";
 import { TrackingUtils } from "@/utils/TrackingUtils";
 import { Stack } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import {
-  Alert,
-  Platform,
-  Text,
-  TouchableOpacity,
-  useColorScheme,
-  View,
-} from "react-native";
+import { Alert, Platform, Text, TouchableOpacity, View } from "react-native";
 import MapView, { Marker, Polyline, PROVIDER_DEFAULT } from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function LiveTrackingScreen() {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
+  const { isDark } = useTheme();
   const mapRef = useRef<MapView | null>(null);
 
   const [isTracking, setIsTracking] = useState(false);
@@ -280,9 +273,7 @@ export default function LiveTrackingScreen() {
         {/* Thống kê */}
         <View
           className={`absolute ${Platform.OS === "ios" ? "top-16" : "bottom-28"} left-5 right-5 rounded-3xl p-4 flex-row flex-wrap justify-between ${
-            isDark
-              ? "bg-surface-dark/95 shadow-lg"
-              : "bg-white/95 shadow-md"
+            isDark ? "bg-surface-dark/95 shadow-lg" : "bg-white/95 shadow-md"
           }`}
           style={{
             shadowColor: "#000",

@@ -109,6 +109,9 @@ export const useAuthStore = create<AuthState>((set) => ({
       await authService.signOut();
       await secureStorageService.clearAll();
 
+      // Clear user profile from store
+      useUserStore.getState().clearProfile();
+
       set({
         user: null,
         token: null,

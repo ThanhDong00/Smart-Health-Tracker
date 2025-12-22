@@ -11,8 +11,8 @@ import {
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 
-import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useAuth } from "@/hooks/useAuth";
+import { useTheme } from "@/hooks/useTheme";
 import { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
 
@@ -70,10 +70,15 @@ function RootLayoutNav() {
 }
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
+  const { isDark, isHydrated } = useTheme();
+
+  // Wait for theme to hydrate from storage before rendering
+  if (!isHydrated) {
+    return null;
+  }
 
   return (
-    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+    <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
       <RootLayoutNav />
       <StatusBar style="auto" />
     </ThemeProvider>

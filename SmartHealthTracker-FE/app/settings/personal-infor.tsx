@@ -9,7 +9,6 @@ import {
   ScrollView,
   Text,
   TouchableOpacity,
-  useColorScheme,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -18,6 +17,7 @@ import PrimaryButton from "@/components/primary-button";
 import DobInputField from "@/components/ui/dob-input-field";
 import InputField from "@/components/ui/input-field";
 import SelectedField from "@/components/ui/selected-field";
+import { useTheme } from "@/hooks/useTheme";
 import { CloudinaryService } from "@/services/cloudinary.service";
 import { UserService } from "@/services/user.service";
 import { useUserStore } from "@/store/user.store";
@@ -69,8 +69,7 @@ const AvatarSection = ({
 );
 
 export default function PersonalInforScreen() {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
+  const { isDark } = useTheme();
   const { profile, setProfile } = useUserStore();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
