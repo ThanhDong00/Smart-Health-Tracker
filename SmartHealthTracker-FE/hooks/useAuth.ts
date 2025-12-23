@@ -19,16 +19,18 @@ export function useAuth() {
   } = useAuthStore();
 
   useEffect(() => {
-    let isInitialized = false;
-
+    // Only initialize once when component first mounts
     const initializeAuth = async () => {
       await initialize();
-      isInitialized = true;
     };
+
     initializeAuth();
 
     // Setup Firebase auth state listener
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      // Only process Firebase auth changes after initialization is complete
+      const { isInitialized, isAuthenticated } = useAuthStore.getState();
+      
       if (!isInitialized) {
         return;
       }
@@ -45,8 +47,8 @@ export function useAuth() {
         // Update user object
         setUser(firebaseUser);
       } else {
-        // Firebase user is null - only clear if we don't have a restored session
-        const { isAuthenticated } = useAuthStore.getState();
+        // Firebase user is null - only clear if we're not authenticated
+        // This prevents clearing session when user logged in without remember me
         if (!isAuthenticated) {
           setUser(null);
         }
@@ -54,7 +56,7 @@ export function useAuth() {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, []); // Empty dependency array - only run once
 
   return {
     user,

@@ -147,6 +147,13 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   initialize: async () => {
+    const state = useAuthStore.getState();
+
+    // Only run once - if already initialized, skip
+    if (state.isInitialized) {
+      return;
+    }
+
     try {
       set({ isLoading: true });
 
@@ -177,20 +184,10 @@ export const useAuthStore = create<AuthState>((set) => ({
         // Refresh token in background if needed
         // Firebase onAuthStateChanged will handle token refresh
       } else {
-        // No remember me - clear everything and sign out from Firebase
-        await secureStorageService.clearAll();
-
-        // Sign out from Firebase to clear its persistence
-        try {
-          await authService.signOut();
-        } catch (error) {
-          console.error("Error signing out during initialize:", error);
-        }
-
+        // No remember me - just mark as initialized
+        // DON'T clear current session (if user just logged in without remember me)
+        // DON'T sign out from Firebase (if user is currently logged in)
         set({
-          user: null,
-          token: null,
-          isAuthenticated: false,
           isLoading: false,
           isInitialized: true,
         });
