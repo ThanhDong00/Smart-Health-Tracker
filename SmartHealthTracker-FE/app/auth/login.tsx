@@ -28,7 +28,7 @@ export default function LoginScreen() {
     }
 
     try {
-      await signIn(signInForm.email, signInForm.password);
+      await signIn(signInForm.email, signInForm.password, rememberMe);
       router.replace("/(tabs)");
     } catch (error: any) {
       Alert.alert("Error", error.message || "Failed to sign in");

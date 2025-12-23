@@ -14,7 +14,11 @@ interface AuthState {
 
   setUser: (user: User | null) => void;
   setToken: (token: string | null) => void;
-  signIn: (email: string, password: string) => Promise<void>;
+  signIn: (
+    email: string,
+    password: string,
+    rememberMe?: boolean
+  ) => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   sendPasswordReset: (email: string) => Promise<void>;
@@ -43,14 +47,21 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ token });
   },
 
-  signIn: async (email, password) => {
+  signIn: async (email, password, rememberMe = false) => {
     try {
       set({ isLoading: true });
       const user = await authService.signIn(email, password);
       const token = await user.getIdToken();
 
-      await secureStorageService.saveUser(user);
-      await secureStorageService.saveToken(token);
+      // Only save to secure storage if remember me is checked
+      if (rememberMe) {
+        await secureStorageService.saveUser(user);
+        await secureStorageService.saveToken(token);
+        await secureStorageService.saveRememberMe(true);
+      } else {
+        // Clear any previous remember me data
+        await secureStorageService.clearAll();
+      }
 
       set({
         user,
@@ -139,44 +150,43 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       set({ isLoading: true });
 
-      const [savedUser, savedToken] = await Promise.all([
+      const [savedUser, savedToken, rememberMe] = await Promise.all([
         secureStorageService.getUser(),
         secureStorageService.getToken(),
+        secureStorageService.getRememberMe(),
       ]);
 
-      if (savedUser && savedToken) {
-        const currentUser = authService.getCurrentUser();
-        if (currentUser) {
-          const newToken = await currentUser.getIdToken(true);
-          await secureStorageService.saveToken(newToken);
+      // Only restore session if remember me was checked
+      if (savedUser && savedToken && rememberMe) {
+        set({
+          user: savedUser,
+          token: savedToken,
+          isAuthenticated: true,
+          isLoading: false,
+          isInitialized: true,
+        });
 
-          set({
-            user: currentUser,
-            token: newToken,
-            isAuthenticated: true,
-            isLoading: false,
-            isInitialized: true,
-          });
-
-          // Load profile from be
-          try {
-            const profile = await UserService.getUserProfile();
-            useUserStore.getState().setProfile(profile.data);
-          } catch (error) {
-            console.error("Failed to load user profile:", error);
-          }
-        } else {
-          await secureStorageService.clearAll();
-
-          set({
-            user: null,
-            token: null,
-            isAuthenticated: false,
-            isLoading: false,
-            isInitialized: true,
-          });
+        // Load profile from backend in background
+        try {
+          const profile = await UserService.getUserProfile();
+          useUserStore.getState().setProfile(profile.data);
+        } catch (error) {
+          console.error("Failed to load user profile:", error);
         }
+
+        // Refresh token in background if needed
+        // Firebase onAuthStateChanged will handle token refresh
       } else {
+        // No remember me - clear everything and sign out from Firebase
+        await secureStorageService.clearAll();
+
+        // Sign out from Firebase to clear its persistence
+        try {
+          await authService.signOut();
+        } catch (error) {
+          console.error("Error signing out during initialize:", error);
+        }
+
         set({
           user: null,
           token: null,
