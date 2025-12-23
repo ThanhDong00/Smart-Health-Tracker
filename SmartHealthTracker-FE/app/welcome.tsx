@@ -1,13 +1,13 @@
 import PrimaryButton from "@/components/primary-button";
 import SecondaryButton from "@/components/secondary-button";
+import { useTheme } from "@/hooks/useTheme";
 import Entypo from "@expo/vector-icons/Entypo";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router, Stack } from "expo-router";
-import { Text, useColorScheme, View } from "react-native";
+import { Text, View } from "react-native";
 
 export default function WelcomeScreen() {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
+  const { isDark } = useTheme();
 
   const loginButtonHandle = () => {
     router.push("/auth/login");
