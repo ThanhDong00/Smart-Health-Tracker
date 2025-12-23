@@ -66,9 +66,9 @@ export default function SocialScreen() {
             </View>
           </View>
 
-          <PostCart onCommentPress={handleCommentPress} />
-          <PostCart />
-          <PostCart />
+          <PostCart onCommentPress={handleCommentPress} isDark={isDark} />
+          <PostCart isDark={isDark} />
+          <PostCart isDark={isDark} />
         </View>
       </ScrollView>
     </SafeAreaView>

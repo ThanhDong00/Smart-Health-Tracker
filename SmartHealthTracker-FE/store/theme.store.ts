@@ -30,7 +30,11 @@ export const useThemeStore = create<ThemeState>()(
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (state) => ({ theme: state.theme }),
       onRehydrateStorage: () => (state) => {
-        state?.setHasHydrated(true);
+        if (state) {
+          // Sync isDark with restored theme value
+          state.isDark = state.theme === "dark";
+          state.setHasHydrated(true);
+        }
       },
     }
   )

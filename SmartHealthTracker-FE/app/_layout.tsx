@@ -74,7 +74,11 @@ export default function RootLayout() {
 
   // Wait for theme to hydrate from storage before rendering
   if (!isHydrated) {
-    return null;
+    return (
+      <View className="flex-1 justify-center items-center bg-white">
+        <ActivityIndicator size="large" color="#7f27ff" />
+      </View>
+    );
   }
 
   return (

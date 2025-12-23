@@ -3,7 +3,7 @@ import { useTheme } from "@/hooks/useTheme";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { Stack } from "expo-router";
-import { useCallback, useMemo, useRef } from "react";
+import { useMemo, useRef } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -13,9 +13,9 @@ export default function AppearanceScreen() {
   const bottomSheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ["25%", "30%"], []);
 
-  const handleSheetChanges = useCallback((index: number) => {
-    console.log("handleSheetChanges", index);
-  }, []);
+  // const handleSheetChanges = useCallback((index: number) => {
+  //   console.log("handleSheetChanges", index);
+  // }, []);
 
   const handleThemeSelect = (selectedTheme: "light" | "dark") => {
     setTheme(selectedTheme);
@@ -112,7 +112,7 @@ export default function AppearanceScreen() {
           ref={bottomSheetRef}
           index={-1}
           snapPoints={snapPoints}
-          onChange={handleSheetChanges}
+          // onChange={handleSheetChanges}
           enablePanDownToClose={true}
           backgroundStyle={{
             backgroundColor: isDark ? "#1e1e2e" : "#ffffff",
