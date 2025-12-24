@@ -10,6 +10,7 @@ import {
 } from "@react-navigation/native";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import Toast from "react-native-toast-message";
 
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
@@ -85,6 +86,7 @@ export default function RootLayout() {
     <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
       <RootLayoutNav />
       <StatusBar style="auto" />
+      <Toast />
     </ThemeProvider>
   );
 }

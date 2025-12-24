@@ -1,11 +1,12 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 
 interface WorkoutCalendarProps {
   selectedDate: string;
   onDateSelect: (dateString: string) => void;
   onMonthChange?: (month: Date) => void;
+  currentMonth: Date;
   datesWithActivities: string[];
   isDark: boolean;
 }
@@ -18,11 +19,10 @@ export default function WorkoutCalendar({
   selectedDate,
   onDateSelect,
   onMonthChange,
+  currentMonth,
   datesWithActivities,
   isDark,
 }: WorkoutCalendarProps) {
-  const [currentMonth, setCurrentMonth] = useState(new Date());
-
   // Generate calendar days (memoized)
   const calendarDays = useMemo(() => {
     const year = currentMonth.getFullYear();
@@ -77,7 +77,6 @@ export default function WorkoutCalendar({
     } else {
       newMonth.setMonth(newMonth.getMonth() + 1);
     }
-    setCurrentMonth(newMonth);
     onMonthChange?.(newMonth);
 
     // Auto-select first day of new month

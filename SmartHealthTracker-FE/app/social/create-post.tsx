@@ -1,10 +1,15 @@
 import PrimaryButton from "@/components/primary-button";
 import PostAvatar from "@/components/ui/social/post-avatar";
 import { useTheme } from "@/hooks/useTheme";
+import { CloudinaryService } from "@/services/cloudinary.service";
+import { socialService } from "@/services/social.service";
+import { useUserStore } from "@/store/user.store";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { Stack } from "expo-router";
+import * as ImagePicker from "expo-image-picker";
+import { Stack, useRouter } from "expo-router";
 import { useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Image,
   ScrollView,
@@ -14,45 +19,113 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Toast from "react-native-toast-message";
 
 export default function CreatePostScreen() {
   const { isDark } = useTheme();
+  const router = useRouter();
   const [content, setContent] = useState("");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const { profile } = useUserStore();
+  const userName = profile ? `${profile.fullName}` : "User";
 
-  // Mock data
-  const userName = "John Doe";
+  const handleAddPhoto = async () => {
+    try {
+      // Request permission
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-  const handleAddPhoto = () => {
-    // Mock: simulate image selection
-    Alert.alert("Add Photo", "Image picker will be implemented here", [
-      {
-        text: "Cancel",
-        style: "cancel",
-      },
-      {
-        text: "Select Mock Image",
-        onPress: () =>
-          setSelectedImage(
-            "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800"
-          ),
-      },
-    ]);
+      if (status !== "granted") {
+        Alert.alert(
+          "Permission Required",
+          "Please grant photo library access to upload images"
+        );
+        return;
+      }
+
+      // Pick image
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: "images" as any,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        setSelectedImage(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error("Error picking image:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to select image",
+      });
+    }
   };
 
   const handleRemoveImage = () => {
     setSelectedImage(null);
   };
 
-  const handlePost = () => {
+  const handlePost = async () => {
     if (!content.trim()) {
-      Alert.alert("Error", "Please enter some content");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Please enter some content",
+      });
       return;
     }
-    Alert.alert("Success", "Post created successfully!");
-    // Reset form
-    setContent("");
-    setSelectedImage(null);
+
+    try {
+      setIsLoading(true);
+
+      let imageUrl: string | undefined = undefined;
+
+      // Upload image to Cloudinary if selected
+      if (selectedImage) {
+        setIsUploadingImage(true);
+        imageUrl = await CloudinaryService.uploadImage(
+          selectedImage,
+          "social-posts"
+        );
+        setIsUploadingImage(false);
+      }
+
+      // Create post
+      await socialService.createPost({
+        content: content.trim(),
+        imageUrl,
+        visibility: "PUBLIC",
+      });
+
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Post created successfully!",
+      });
+
+      // Reset form and navigate back
+      setContent("");
+      setSelectedImage(null);
+      // Wait a moment to show the toast
+      setTimeout(() => {
+        router.push("/(tabs)/social");
+      }, 500);
+    } catch (error: any) {
+      console.error("Error creating post:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error?.response?.data?.message || "Failed to create post",
+      });
+    } finally {
+      setIsLoading(false);
+      setIsUploadingImage(false);
+    }
   };
 
   return (
@@ -60,7 +133,6 @@ export default function CreatePostScreen() {
       className={`flex-1 ${
         isDark ? "bg-background-dark" : "bg-background-light"
       }`}
-      edges={["top"]}
     >
       <Stack.Screen
         options={{
@@ -107,6 +179,7 @@ export default function CreatePostScreen() {
             textAlignVertical="top"
             value={content}
             onChangeText={setContent}
+            editable={!isLoading}
             style={{ height: 150 }}
           />
         </View>
@@ -122,18 +195,27 @@ export default function CreatePostScreen() {
               />
             </View>
             {/* Remove Image Button */}
-            <TouchableOpacity
-              onPress={handleRemoveImage}
-              className="absolute top-2 right-2 bg-black/50 rounded-full p-2"
-            >
-              <MaterialIcons name="close" size={20} color="white" />
-            </TouchableOpacity>
+            {!isLoading && (
+              <TouchableOpacity
+                onPress={handleRemoveImage}
+                className="absolute top-2 right-2 bg-black/50 rounded-full p-2"
+              >
+                <MaterialIcons name="close" size={20} color="white" />
+              </TouchableOpacity>
+            )}
+            {isUploadingImage && (
+              <View className="absolute inset-0 bg-black/30 items-center justify-center rounded-xl">
+                <ActivityIndicator size="large" color="white" />
+                <Text className="text-white mt-2">Uploading...</Text>
+              </View>
+            )}
           </View>
         )}
 
         {/* Add Photo Button */}
         <TouchableOpacity
           onPress={handleAddPhoto}
+          disabled={isLoading}
           className={`flex-row items-center justify-center gap-2 rounded-xl p-4 mb-6 border-2 border-dashed ${
             isDark
               ? "border-surface-variant-dark bg-surface-dark/50"
@@ -158,12 +240,14 @@ export default function CreatePostScreen() {
       {/* Post Button */}
       <View className="p-6 pt-2 mb-8">
         <PrimaryButton
-          title="Post"
+          title={isLoading ? "Posting..." : "Post"}
           onPress={handlePost}
-          disabled={!content.trim()}
+          disabled={isLoading || !content.trim()}
           isDark={isDark}
         />
       </View>
+
+      <Toast />
     </SafeAreaView>
   );
 }
