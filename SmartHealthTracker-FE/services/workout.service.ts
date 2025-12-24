@@ -15,9 +15,11 @@ export const WorkoutService = {
     }
   },
 
-  getWorkouts: async () => {
+  getWorkouts: async (fromDate: string, toDate: string) => {
     try {
-      const response = await apiClient.get("/health/workouts");
+      const response = await apiClient.get("/health/workouts/history", {
+        params: { fromDate, toDate },
+      });
       return response.data;
     } catch (error) {
       console.error("Error fetching workouts:", error);
