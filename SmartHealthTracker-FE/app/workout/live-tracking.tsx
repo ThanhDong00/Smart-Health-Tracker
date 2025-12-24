@@ -3,6 +3,7 @@ import LocationService from "@/services/location.service";
 import { WorkoutService } from "@/services/workout.service";
 import { useUserStore } from "@/store/user.store";
 import { TrackingUtils } from "@/utils/TrackingUtils";
+import { formatDateTimeForJava } from "@/utils/formatters";
 import { Stack, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { Alert, Platform, Text, TouchableOpacity, View } from "react-native";
@@ -79,7 +80,7 @@ export default function LiveTrackingScreen() {
 
     // Save actual start time for API
     if (!actualStartTimeRef.current) {
-      actualStartTimeRef.current = new Date().toISOString();
+      actualStartTimeRef.current = formatDateTimeForJava(new Date());
     }
 
     // Start timer
@@ -214,15 +215,16 @@ export default function LiveTrackingScreen() {
         longitude: coord.longitude,
         altitude: coord.altitude || 0,
         timestamp: coord.timestamp
-          ? new Date(coord.timestamp).toISOString()
-          : new Date().toISOString(),
+          ? formatDateTimeForJava(new Date(coord.timestamp))
+          : formatDateTimeForJava(new Date()),
       }));
 
       // Prepare workout data
       const workoutData = {
-        type: "running",
-        startTime: actualStartTimeRef.current || new Date().toISOString(),
-        endTime: new Date().toISOString(),
+        type: "RUNNING",
+        startTime:
+          actualStartTimeRef.current || formatDateTimeForJava(new Date()),
+        endTime: formatDateTimeForJava(new Date()),
         durationSeconds: duration,
         distanceMeters: Math.round(distance),
         avgSpeedMps: parseFloat(avgSpeedMps.toFixed(2)),
