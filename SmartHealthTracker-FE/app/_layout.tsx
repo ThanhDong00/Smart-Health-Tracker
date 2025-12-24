@@ -11,8 +11,8 @@ import {
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 
-import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useAuth } from "@/hooks/useAuth";
+import { useTheme } from "@/hooks/useTheme";
 import { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
 
@@ -37,7 +37,7 @@ function RootLayoutNav() {
     // Chỉ redirect khi:
     // 1. User đã authenticated nhưng đang ở trang auth/welcome
     // 2. User chưa authenticated nhưng đang ở (tabs)
-    if (isAuthenticated && (inAuthPages || segments.length === 0)) {
+    if (isAuthenticated && inAuthPages) {
       console.log("Authenticated user, redirecting to tabs");
       router.replace("/(tabs)");
     } else if (!isAuthenticated && inAuthGroup) {
@@ -70,10 +70,19 @@ function RootLayoutNav() {
 }
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
+  const { isDark, isHydrated } = useTheme();
+
+  // Wait for theme to hydrate from storage before rendering
+  if (!isHydrated) {
+    return (
+      <View className="flex-1 justify-center items-center bg-white">
+        <ActivityIndicator size="large" color="#7f27ff" />
+      </View>
+    );
+  }
 
   return (
-    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+    <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
       <RootLayoutNav />
       <StatusBar style="auto" />
     </ThemeProvider>

@@ -1,13 +1,24 @@
 import { CardCollapsible } from "@/components/ui/card-collapsible";
 import ProgressBar from "@/components/ui/progress-bar-h";
+import SedentaryReminder from "@/components/ui/sedentary-reminder";
 import SleepBarChart from "@/components/ui/sleep-bar-chart";
+import { useTheme } from "@/hooks/useTheme";
+import { useStepCounter } from "@/hooks/useStepCounter";
 import { Stack } from "expo-router";
-import { ScrollView, Text, useColorScheme, View } from "react-native";
+import { ScrollView, Text, View, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useEffect } from "react";
+import { registerBackgroundSync } from "@/services/backgroundSync.service";
 
 export default function HomeScreen() {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
+  const { isDark } = useTheme();
+  const { currentSteps, isAvailable, isLoading } = useStepCounter();
+  const stepGoal = 10000;
+
+  // Register background sync on mount
+  useEffect(() => {
+    registerBackgroundSync();
+  }, []);
 
   return (
     <SafeAreaView
@@ -25,7 +36,7 @@ export default function HomeScreen() {
           },
           headerShadowVisible: false,
           headerStyle: {
-            backgroundColor: isDark ? "#1a1a1a" : "#f8fafc",
+            backgroundColor: isDark ? "#0f0f23" : "#f8fafc",
           },
           headerTintColor: isDark ? "#ffffff" : "#1e293b",
         }}
@@ -54,6 +65,9 @@ export default function HomeScreen() {
         </View>
 
         <View className="gap-4">
+          {/* Sedentary Clock */}
+          <SedentaryReminder isDark={isDark} />
+
           {/* Walk */}
           <CardCollapsible
             title="Daily Walking"
@@ -62,33 +76,61 @@ export default function HomeScreen() {
             isDark={isDark}
           >
             <View>
-              <ProgressBar
-                current={6754}
-                max={10000}
-                color="bg-primary"
-                backgroundColor="bg-secondary"
-              />
+              {isLoading ? (
+                <View className="py-4 items-center">
+                  <ActivityIndicator
+                    size="large"
+                    color={isDark ? "#3b82f6" : "#2563eb"}
+                  />
+                  <Text
+                    className={`mt-2 text-sm ${
+                      isDark ? "text-text-secondary" : "text-text-muted"
+                    }`}
+                  >
+                    Loading step data...
+                  </Text>
+                </View>
+              ) : !isAvailable ? (
+                <View className="py-4 items-center">
+                  <Text
+                    className={`text-sm ${
+                      isDark ? "text-text-secondary" : "text-text-muted"
+                    }`}
+                  >
+                    Pedometer not available on this device
+                  </Text>
+                </View>
+              ) : (
+                <>
+                  <ProgressBar
+                    current={currentSteps}
+                    max={stepGoal}
+                    color="bg-primary"
+                    backgroundColor="bg-secondary"
+                  />
 
-              <View className="mt-2 flex-row justify-between">
-                <View>
-                  <Text
-                    className={`text-sm ${
-                      isDark ? "text-text-secondary" : "text-text-muted"
-                    }`}
-                  >
-                    6754 steps
-                  </Text>
-                </View>
-                <View>
-                  <Text
-                    className={`text-sm ${
-                      isDark ? "text-text-secondary" : "text-text-muted"
-                    }`}
-                  >
-                    10,000 steps goal
-                  </Text>
-                </View>
-              </View>
+                  <View className="mt-2 flex-row justify-between">
+                    <View>
+                      <Text
+                        className={`text-sm ${
+                          isDark ? "text-text-secondary" : "text-text-muted"
+                        }`}
+                      >
+                        {currentSteps.toLocaleString()} steps
+                      </Text>
+                    </View>
+                    <View>
+                      <Text
+                        className={`text-sm ${
+                          isDark ? "text-text-secondary" : "text-text-muted"
+                        }`}
+                      >
+                        {stepGoal.toLocaleString()} steps goal
+                      </Text>
+                    </View>
+                  </View>
+                </>
+              )}
             </View>
           </CardCollapsible>
 

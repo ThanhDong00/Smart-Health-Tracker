@@ -1,14 +1,14 @@
 import PrimaryButton from "@/components/primary-button";
 import InputField from "@/components/ui/input-field";
 import { useAuth } from "@/hooks/useAuth";
+import { useTheme } from "@/hooks/useTheme";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router, Stack } from "expo-router";
 import { useState } from "react";
-import { Alert, Text, useColorScheme, View } from "react-native";
+import { Alert, Text, View } from "react-native";
 
 export default function ForgotPasswordScreen() {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
+  const { isDark } = useTheme();
   const { sendPasswordReset, isLoading } = useAuth();
   const [email, setEmail] = useState("");
 
@@ -38,7 +38,7 @@ export default function ForgotPasswordScreen() {
           headerTitle: "",
           headerShadowVisible: false,
           headerStyle: {
-            backgroundColor: isDark ? "#1a1a1a" : "#f8fafc",
+            backgroundColor: isDark ? "#0f0f23" : "#f8fafc",
           },
           headerTintColor: isDark ? "#ffffff" : "#1e293b",
           headerTitleStyle: {

@@ -1,17 +1,12 @@
 import WorkoutActivityCard from "@/components/ui/workout-activity-card";
 import WorkoutCalendar from "@/components/ui/workout-calendar";
 import WorkoutStatCard from "@/components/ui/workout-stat-card";
+import { useTheme } from "@/hooks/useTheme";
 import { formatDistance, formatPace, getDateString } from "@/utils/formatters";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Stack, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
-import {
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  useColorScheme,
-  View,
-} from "react-native";
+import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 // Types
@@ -126,8 +121,7 @@ const mockActivities: Activity[] = [
 
 export default function WorkoutScreen() {
   const router = useRouter();
-  const colorScheme = useColorScheme(); // Detect system theme
-  const isDark = colorScheme === "dark";
+  const { isDark } = useTheme();
 
   // Default to Dec 24, 2025 (a day with activity)
   const [selectedDate, setSelectedDate] = useState(getDateString(new Date()));
@@ -196,7 +190,7 @@ export default function WorkoutScreen() {
           },
           headerShadowVisible: false,
           headerStyle: {
-            backgroundColor: isDark ? "#1a1a1a" : "#f8fafc",
+            backgroundColor: isDark ? "#0f0f23" : "#f8fafc",
           },
           headerTintColor: isDark ? "#ffffff" : "#1e293b",
         }}

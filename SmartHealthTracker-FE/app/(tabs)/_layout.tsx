@@ -4,31 +4,25 @@ import React from "react";
 import { HapticTab } from "@/components/haptic-tab";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { Colors } from "@/constants/theme";
-import { useColorScheme } from "@/hooks/use-color-scheme";
+import { useTheme } from "@/hooks/useTheme";
 
 import Feather from "@expo/vector-icons/Feather";
-import FontAwesome from "@expo/vector-icons/FontAwesome";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const { theme } = useTheme();
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? "light"].primary,
+        tabBarActiveTintColor: Colors[theme ?? "light"].primary,
         tabBarButton: HapticTab,
         headerShown: true,
         headerTitleAlign: "center",
         headerLeft: () => {
           return (
-            <FontAwesome
-              name="heartbeat"
-              size={32}
-              color="red"
-              className="px-4"
-            />
+            <MaterialIcons name="code" size={32} color="red" className="px-4" />
           );
         },
         headerRight: () => {
@@ -53,6 +47,15 @@ export default function TabLayout() {
           title: "Home",
           tabBarIcon: ({ color }) => (
             <IconSymbol size={28} name="house.fill" color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="social"
+        options={{
+          title: "Social",
+          tabBarIcon: ({ color }) => (
+            <MaterialIcons name="people-outline" size={28} color={color} />
           ),
         }}
       />
