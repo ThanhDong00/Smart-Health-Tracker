@@ -55,8 +55,7 @@ const PostCart = ({
             source={
               post.user.avatarUrl
                 ? { uri: post.user.avatarUrl }
-                : // : require("../../assets/default-avatar.png")
-                  { uri: "https://i.pravatar.cc/300" }
+                : require("../../../assets/images/person.png")
             }
             className="w-full h-full"
             resizeMode="cover"

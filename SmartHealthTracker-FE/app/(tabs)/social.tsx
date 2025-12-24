@@ -142,6 +142,18 @@ export default function SocialScreen() {
       />
 
       <View className="flex-1">
+        {/* My Group Navigation Button */}
+        <TouchableOpacity
+          className={`mb-4 p-4 rounded-2xl items-center ${isDark ? "bg-primary-dark shadow-lg" : "bg-primary shadow-md"}`}
+          onPress={() => router.push("/social/groups/groups")}
+        >
+          <Text
+            className={`text-base font-medium ${isDark ? "text-text-primary" : "text-text-dark"}`}
+          >
+            My Groups
+          </Text>
+        </TouchableOpacity>
+
         {/* Create Post Card */}
         <View
           className={`flex-row items-center rounded-2xl p-4 mb-4 ${isDark ? "bg-surface-dark shadow-lg" : "bg-card-light shadow-md"} gap-4`}
@@ -151,8 +163,7 @@ export default function SocialScreen() {
               source={
                 profile?.avatarUrl
                   ? { uri: profile.avatarUrl }
-                  : // : require("../../assets/default-avatar.png")
-                    { uri: "https://i.pravatar.cc/300" }
+                  : require("../../assets/images/person.png")
               }
               className="w-full h-full"
               resizeMode="cover"

@@ -142,8 +142,7 @@ export default function DetailPostScreen() {
             source={
               item.user.avatarUrl
                 ? { uri: item.user.avatarUrl }
-                : // : require("../../assets/default-avatar.png")
-                  { uri: "https://i.pravatar.cc/300" }
+                : require("../../assets/images/person.png")
             }
             className="w-full h-full"
             resizeMode="cover"
