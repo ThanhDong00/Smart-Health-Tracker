@@ -1,7 +1,7 @@
+import { socialService } from "@/services/social.service";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
-import { socialService } from "@/services/social.service";
 import Toast from "react-native-toast-message";
 
 type PostActionProps = {
@@ -12,16 +12,18 @@ type PostActionProps = {
   isDark?: boolean;
   onCommentPress?: () => void;
   onLikeUpdate?: (isLiked: boolean, likeCount: number) => void;
+  disableComment?: boolean;
 };
 
-const PostAction = ({ 
-  postId, 
-  initialIsLiked, 
-  initialLikeCount, 
+const PostAction = ({
+  postId,
+  initialIsLiked,
+  initialLikeCount,
   commentCount,
-  isDark, 
+  isDark,
   onCommentPress,
-  onLikeUpdate 
+  onLikeUpdate,
+  disableComment = false,
 }: PostActionProps) => {
   const [isLiked, setIsLiked] = useState(initialIsLiked);
   const [likeCount, setLikeCount] = useState(initialLikeCount);
@@ -35,14 +37,14 @@ const PostAction = ({
 
     try {
       setIsLiking(true);
-      
+
       // Optimistic update
       const newIsLiked = !isLiked;
       const newLikeCount = newIsLiked ? likeCount + 1 : likeCount - 1;
-      
+
       setIsLiked(newIsLiked);
       setLikeCount(newLikeCount);
-      
+
       if (onLikeUpdate) {
         onLikeUpdate(newIsLiked, newLikeCount);
       }
@@ -55,11 +57,11 @@ const PostAction = ({
       }
     } catch (error: any) {
       console.error("Error toggling like:", error);
-      
+
       // Revert on error
       setIsLiked(previousIsLiked);
       setLikeCount(previousLikeCount);
-      
+
       if (onLikeUpdate) {
         onLikeUpdate(previousIsLiked, previousLikeCount);
       }
@@ -83,16 +85,18 @@ const PostAction = ({
         disabled={isLiking}
         activeOpacity={0.7}
       >
-        <MaterialIcons 
-          name={isLiked ? "favorite" : "favorite-border"} 
-          size={24} 
-          color={isLiked ? "#ef4444" : (isDark ? "#a1a1aa" : "#6b7280")} 
+        <MaterialIcons
+          name={isLiked ? "favorite" : "favorite-border"}
+          size={24}
+          color={isLiked ? "#ef4444" : isDark ? "#a1a1aa" : "#6b7280"}
         />
         <Text
           className={`text-sm ${
-            isLiked 
-              ? "text-red-500" 
-              : isDark ? "text-text-secondary" : "text-text-muted"
+            isLiked
+              ? "text-red-500"
+              : isDark
+                ? "text-text-secondary"
+                : "text-text-muted"
           }`}
         >
           {likeCount}
@@ -104,6 +108,7 @@ const PostAction = ({
         className="flex-row items-center gap-1.5"
         onPress={onCommentPress}
         activeOpacity={0.7}
+        disabled={disableComment}
       >
         <MaterialIcons
           name="comment"

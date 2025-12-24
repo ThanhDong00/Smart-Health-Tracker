@@ -1,12 +1,14 @@
 import PostAvatar from "@/components/ui/social/post-avatar";
+import PostCart from "@/components/ui/social/post-card";
 import { useTheme } from "@/hooks/useTheme";
 import { Comment, Post, socialService } from "@/services/social.service";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { Stack, useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
+  Image,
   KeyboardAvoidingView,
   Platform,
   Text,
@@ -14,12 +16,14 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 
 export default function DetailPostScreen() {
   const { isDark } = useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const postId = parseInt(id || "0");
+  const router = useRouter();
 
   const [post, setPost] = useState<Post | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
@@ -37,19 +41,40 @@ export default function DetailPostScreen() {
 
   const fetchPostAndComments = async () => {
     try {
-      // Fetch post from posts list (we'll need to fetch all posts to find this one)
-      // For now, we'll fetch comments only
+      fetchPost();
       fetchComments();
     } catch (error) {
       console.error("Error fetching data:", error);
     }
   };
 
+  const fetchPost = async () => {
+    try {
+      setIsLoadingPost(true);
+      const response = await socialService.getPostById(postId);
+      if (response.data) {
+        setPost(response.data);
+      }
+    } catch (error: any) {
+      console.error("Error fetching post:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error?.response?.data?.message || "Failed to load post",
+      });
+    } finally {
+      setIsLoadingPost(false);
+    }
+  };
+
+  const handlePostUpdate = () => {
+    fetchPost();
+  };
+
   const fetchComments = async () => {
     try {
       setIsLoadingComments(true);
       const response = await socialService.getComments(postId, 0, 50);
-
       if (response.data) {
         setComments(response.data.content);
       }
@@ -62,7 +87,6 @@ export default function DetailPostScreen() {
       });
     } finally {
       setIsLoadingComments(false);
-      setIsLoadingPost(false);
     }
   };
 
@@ -71,7 +95,6 @@ export default function DetailPostScreen() {
 
     try {
       setIsSubmitting(true);
-
       await socialService.createComment(postId, {
         content: commentText.trim(),
       });
@@ -83,8 +106,6 @@ export default function DetailPostScreen() {
       });
 
       setCommentText("");
-
-      // Refresh comments
       fetchComments();
     } catch (error: any) {
       console.error("Error posting comment:", error);
@@ -113,56 +134,108 @@ export default function DetailPostScreen() {
     return date.toLocaleDateString();
   };
 
-  const renderComment = ({ item }: { item: Comment }) => (
-    <View className="flex-row gap-3 mb-4">
-      <View className="w-10 h-10 rounded-full overflow-hidden">
-        <PostAvatar />
-      </View>
-      <View className="flex-1">
-        <View
-          className={`rounded-2xl p-3 ${
-            isDark ? "bg-surface-dark" : "bg-gray-100"
-          }`}
-        >
-          <Text
-            className={`font-semibold text-sm mb-1 ${
-              isDark ? "text-text-primary" : "text-text-dark"
+  const renderComment = useCallback(
+    ({ item }: { item: Comment }) => (
+      <View className="flex-row gap-3 mb-4">
+        <View className="w-10 h-10 rounded-full overflow-hidden">
+          <Image
+            source={
+              item.user.avatarUrl
+                ? { uri: item.user.avatarUrl }
+                : // : require("../../assets/default-avatar.png")
+                  { uri: "https://i.pravatar.cc/300" }
+            }
+            className="w-full h-full"
+            resizeMode="cover"
+          />
+        </View>
+        <View className="flex-1">
+          <View
+            className={`rounded-2xl p-3 ${
+              isDark ? "bg-surface-dark" : "bg-gray-100"
             }`}
           >
-            User #{item.userId}
-          </Text>
+            <Text
+              className={`font-semibold text-sm mb-1 ${
+                isDark ? "text-text-primary" : "text-text-dark"
+              }`}
+            >
+              {item.user.fullName}
+            </Text>
+            <Text
+              className={`text-sm ${
+                isDark ? "text-text-primary" : "text-text-dark"
+              }`}
+            >
+              {item.content}
+            </Text>
+          </View>
           <Text
-            className={`text-sm ${
-              isDark ? "text-text-primary" : "text-text-dark"
+            className={`text-xs mt-1 ml-3 ${
+              isDark ? "text-text-secondary" : "text-text-muted"
             }`}
           >
-            {item.content}
+            {formatDate(item.createdAt)}
           </Text>
         </View>
-        <Text
-          className={`text-xs mt-1 ml-3 ${
-            isDark ? "text-text-secondary" : "text-text-muted"
-          }`}
-        >
-          {formatDate(item.createdAt)}
-        </Text>
       </View>
-    </View>
+    ),
+    [isDark]
   );
 
+  const renderHeader = useCallback(
+    () => (
+      <>
+        {/* Post Card */}
+        {post && (
+          <View className="mb-6">
+            <PostCart
+              post={post}
+              isDark={isDark}
+              disableComment={true}
+              onPostUpdate={handlePostUpdate}
+            />
+          </View>
+        )}
+
+        {/* Comments Header */}
+        <View className="mb-6">
+          <Text
+            className={`text-lg font-bold ${
+              isDark ? "text-text-primary" : "text-text-dark"
+            }`}
+          >
+            Comments ({comments.length})
+          </Text>
+        </View>
+      </>
+    ),
+    [post, comments.length, isDark]
+  );
+
+  if (!postId) {
+    return (
+      <SafeAreaView
+        className={`flex-1 ${isDark ? "bg-background-dark" : "bg-background-light"}`}
+        edges={[]}
+      >
+        <View className="flex-1 items-center justify-center">
+          <Text>Invalid post ID</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
-    <View
-      className={`flex-1 ${
-        isDark ? "bg-background-dark" : "bg-background-light"
-      }`}
+    <SafeAreaView
+      className={`flex-1 ${isDark ? "bg-background-dark" : "bg-background-light"}`}
+      edges={[]}
     >
       <Stack.Screen
         options={{
           headerShown: true,
           title: "Post Details",
-          headerTitleStyle: {
-            fontWeight: "bold",
-          },
+          headerTitleStyle: { fontWeight: "bold" },
           headerShadowVisible: false,
           headerStyle: {
             backgroundColor: isDark ? "#0f0f23" : "#f8fafc",
@@ -174,9 +247,9 @@ export default function DetailPostScreen() {
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
-        keyboardVerticalOffset={100}
+        keyboardVerticalOffset={0}
       >
-        {isLoadingPost ? (
+        {isLoadingPost && !post ? (
           <View className="flex-1 items-center justify-center">
             <ActivityIndicator
               size="large"
@@ -194,19 +267,9 @@ export default function DetailPostScreen() {
               data={comments}
               renderItem={renderComment}
               keyExtractor={(item) => item.id.toString()}
-              contentContainerStyle={{ padding: 16, paddingBottom: 80 }}
+              contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
               showsVerticalScrollIndicator={false}
-              ListHeaderComponent={
-                <View className="mb-6">
-                  <Text
-                    className={`text-lg font-bold mb-4 ${
-                      isDark ? "text-text-primary" : "text-text-dark"
-                    }`}
-                  >
-                    Comments ({comments.length})
-                  </Text>
-                </View>
-              }
+              ListHeaderComponent={renderHeader}
               ListEmptyComponent={
                 isLoadingComments ? (
                   <View className="py-10 items-center">
@@ -227,11 +290,12 @@ export default function DetailPostScreen() {
                   </View>
                 )
               }
+              extraData={comments}
             />
 
             {/* Comment Input */}
             <View
-              className={`flex-row items-center gap-3 p-6 border-t ${
+              className={`flex-row items-center gap-3 p-4 border-t ${
                 isDark
                   ? "bg-surface-dark border-surface-variant-dark"
                   : "bg-white border-gray-200"
@@ -289,173 +353,6 @@ export default function DetailPostScreen() {
       </KeyboardAvoidingView>
 
       <Toast />
-    </View>
+    </SafeAreaView>
   );
 }
-
-//       <KeyboardAvoidingView
-//         behavior={Platform.OS === "ios" ? "padding" : "height"}
-//         className="flex-1"
-//         keyboardVerticalOffset={100}
-//       >
-//         <ScrollView className="flex-1">
-//           {/* Post Content */}
-//           <View
-//             className={`m-4 rounded-2xl p-4 ${
-//               isDark ? "bg-surface-dark shadow-lg" : "bg-card-light shadow-md"
-//             }`}
-//           >
-//             {/* Header - User Info */}
-//             <View className="flex-row items-center gap-4 mb-4">
-//               <View className="w-12 h-12 rounded-full overflow-hidden">
-//                 <PostAvatar />
-//               </View>
-
-//               <View className="flex-col gap-1">
-//                 <Text
-//                   className={`font-bold text-base ${
-//                     isDark ? "text-text-primary" : "text-text-dark"
-//                   }`}
-//                 >
-//                   {mockPost.user.fullName}
-//                 </Text>
-
-//                 <Text
-//                   className={`text-sm ${
-//                     isDark ? "text-text-secondary" : "text-text-muted"
-//                   }`}
-//                 >
-//                   {mockPost.createdAt}
-//                 </Text>
-//               </View>
-//             </View>
-
-//             {/* Post Content */}
-//             <View className="mb-4">
-//               <Text
-//                 className={`text-base ${
-//                   isDark ? "text-text-primary" : "text-text-dark"
-//                 }`}
-//               >
-//                 {mockPost.content}
-//               </Text>
-//             </View>
-
-//             {/* Post Image */}
-//             {mockPost.imageUrl && (
-//               <View className="w-full h-64 rounded-xl overflow-hidden mb-4">
-//                 <Image
-//                   source={{ uri: mockPost.imageUrl }}
-//                   className="w-full h-full"
-//                   resizeMode="cover"
-//                 />
-//               </View>
-//             )}
-
-//             {/* Post Action */}
-//             <PostAction />
-//           </View>
-
-//           {/* Comments Section */}
-//           <View className="px-4 pb-4">
-//             <Text
-//               className={`text-lg font-bold mb-4 ${
-//                 isDark ? "text-text-primary" : "text-text-dark"
-//               }`}
-//             >
-//               Comments ({comments.length})
-//             </Text>
-
-//             {comments.map((comment) => (
-//               <View
-//                 key={comment.id}
-//                 className={`flex-row gap-3 mb-4 p-3 rounded-xl ${
-//                   isDark ? "bg-surface-dark" : "bg-gray-50"
-//                 }`}
-//               >
-//                 <View className="w-10 h-10 rounded-full overflow-hidden">
-//                   <Image
-//                     source={{ uri: comment.user.avatarUrl }}
-//                     className="w-full h-full"
-//                     resizeMode="cover"
-//                   />
-//                 </View>
-
-//                 <View className="flex-1">
-//                   <View className="flex-row items-center justify-between mb-1">
-//                     <Text
-//                       className={`font-bold text-sm ${
-//                         isDark ? "text-text-primary" : "text-text-dark"
-//                       }`}
-//                     >
-//                       {comment.user.fullName}
-//                     </Text>
-//                     <Text
-//                       className={`text-xs ${
-//                         isDark ? "text-text-secondary" : "text-text-muted"
-//                       }`}
-//                     >
-//                       {comment.createdAt}
-//                     </Text>
-//                   </View>
-//                   <Text
-//                     className={`text-sm ${
-//                       isDark ? "text-text-primary" : "text-text-dark"
-//                     }`}
-//                   >
-//                     {comment.content}
-//                   </Text>
-//                 </View>
-//               </View>
-//             ))}
-//           </View>
-//         </ScrollView>
-
-//         {/* Input Comment Section - Fixed at bottom */}
-//         <View
-//           className={`flex-row items-center gap-3 p-4 border-t ${
-//             isDark
-//               ? "bg-surface-dark border-surface-variant-dark"
-//               : "bg-white border-gray-200"
-//           }`}
-//         >
-//           <View className="w-10 h-10 rounded-full overflow-hidden">
-//             <PostAvatar />
-//           </View>
-
-//           <View className="flex-1">
-//             <TextInput
-//               className={`rounded-full px-4 py-2 ${
-//                 isDark
-//                   ? "bg-surface-variant-dark text-text-primary"
-//                   : "bg-gray-100 text-text-dark"
-//               }`}
-//               placeholder="Write a comment..."
-//               placeholderTextColor={isDark ? "#6b7280" : "#9ca3af"}
-//               value={commentText}
-//               onChangeText={setCommentText}
-//             />
-//           </View>
-
-//           <TouchableOpacity
-//             onPress={handleSendComment}
-//             disabled={!commentText.trim()}
-//             className={`p-2 rounded-full ${
-//               commentText.trim()
-//                 ? "bg-primary"
-//                 : isDark
-//                 ? "bg-surface-variant-dark"
-//                 : "bg-gray-300"
-//             }`}
-//           >
-//             <MaterialIcons
-//               name="send"
-//               size={20}
-//               color={commentText.trim() ? "white" : isDark ? "#6b7280" : "#9ca3af"}
-//             />
-//           </TouchableOpacity>
-//         </View>
-//       </KeyboardAvoidingView>
-//     </SafeAreaView>
-//   );
-// }

@@ -7,7 +7,7 @@ export const WorkoutService = {
       const response = await apiClient.post("/health/workouts", data, {
         params: { userId },
       });
-      console.log("Workout created:", response);
+      console.log("Workout created");
       return response.data;
     } catch (error) {
       console.error("Error creating workout:", error);

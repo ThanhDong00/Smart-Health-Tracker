@@ -4,7 +4,11 @@ import { ApiResponse } from "@/entity/apiResponse";
 // Types for Social API
 export interface Post {
   id: number;
-  userId: number;
+  user: {
+    id: number;
+    fullName: string;
+    avatarUrl?: string;
+  };
   content: string;
   imageUrl?: string;
   achievementUserId?: number;
@@ -19,7 +23,11 @@ export interface Post {
 export interface Comment {
   id: number;
   postId: number;
-  userId: number;
+  user: {
+    id: number;
+    fullName: string;
+    avatarUrl?: string;
+  };
   content: string;
   createdAt: string;
 }
@@ -61,6 +69,17 @@ export const socialService = {
       return response.data;
     } catch (error) {
       console.error("Error fetching posts:", error);
+      throw error;
+    }
+  },
+
+  // Get post by ID
+  getPostById: async (postId: number): Promise<ApiResponse<Post>> => {
+    try {
+      const response = await apiClient.get(`/social/posts/${postId}`);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching post:", error);
       throw error;
     }
   },

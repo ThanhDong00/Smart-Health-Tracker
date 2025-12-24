@@ -1,17 +1,23 @@
-import { useState } from "react";
-import { Image, Text, View, TouchableOpacity } from "react-native";
 import { Post } from "@/services/social.service";
+import { useState } from "react";
+import { Image, Text, View } from "react-native";
 import PostAction from "./post-action";
-import PostAvatar from "./post-avatar";
 
 type PostCardProps = {
   post: Post;
   isDark?: boolean;
   onCommentPress?: () => void;
   onPostUpdate?: () => void;
+  disableComment?: boolean;
 };
 
-const PostCart = ({ post, isDark, onCommentPress, onPostUpdate }: PostCardProps) => {
+const PostCart = ({
+  post,
+  isDark,
+  onCommentPress,
+  onPostUpdate,
+  disableComment = false,
+}: PostCardProps) => {
   const [isLiked, setIsLiked] = useState(post.likedByMe);
   const [likeCount, setLikeCount] = useState(post.likeCount);
 
@@ -45,7 +51,16 @@ const PostCart = ({ post, isDark, onCommentPress, onPostUpdate }: PostCardProps)
       {/* Header */}
       <View className="flex-row items-center gap-4">
         <View className="w-12 h-12 rounded-full overflow-hidden">
-          <PostAvatar />
+          <Image
+            source={
+              post.user.avatarUrl
+                ? { uri: post.user.avatarUrl }
+                : // : require("../../assets/default-avatar.png")
+                  { uri: "https://i.pravatar.cc/300" }
+            }
+            className="w-full h-full"
+            resizeMode="cover"
+          />
         </View>
 
         <View className="flex-col gap-1">
@@ -54,7 +69,7 @@ const PostCart = ({ post, isDark, onCommentPress, onPostUpdate }: PostCardProps)
               isDark ? "text-text-primary" : "text-text-dark"
             }`}
           >
-            User #{post.userId}
+            {post.user.fullName}
           </Text>
 
           <Text
@@ -91,13 +106,14 @@ const PostCart = ({ post, isDark, onCommentPress, onPostUpdate }: PostCardProps)
 
       {/* Action button */}
       <View>
-        <PostAction 
+        <PostAction
           postId={post.id}
           initialIsLiked={isLiked}
           initialLikeCount={likeCount}
           commentCount={post.commentCount}
           onCommentPress={onCommentPress}
           onLikeUpdate={handleLikeUpdate}
+          disableComment={disableComment}
           isDark={isDark}
         />
       </View>
