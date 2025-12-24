@@ -1,13 +1,16 @@
 import { useTheme } from "@/hooks/useTheme";
 import LocationService from "@/services/location.service";
+import { WorkoutService } from "@/services/workout.service";
+import { useUserStore } from "@/store/user.store";
 import { TrackingUtils } from "@/utils/TrackingUtils";
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { Alert, Platform, Text, TouchableOpacity, View } from "react-native";
 import MapView, { Marker, Polyline, PROVIDER_DEFAULT } from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function LiveTrackingScreen() {
+  const router = useRouter();
   const { isDark } = useTheme();
   const mapRef = useRef<MapView | null>(null);
 
@@ -24,6 +27,10 @@ export default function LiveTrackingScreen() {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startTimeRef = useRef<number | null>(null);
   const pausedTimeRef = useRef<number>(0);
+  const actualStartTimeRef = useRef<string | null>(null);
+
+  const { profile } = useUserStore();
+  const userId = profile ? profile.id : null;
 
   useEffect(() => {
     requestPermission();
@@ -69,6 +76,11 @@ export default function LiveTrackingScreen() {
     setIsTracking(true);
     setIsPaused(false);
     startTimeRef.current = Date.now() - pausedTimeRef.current;
+
+    // Save actual start time for API
+    if (!actualStartTimeRef.current) {
+      actualStartTimeRef.current = new Date().toISOString();
+    }
 
     // Start timer
     timerRef.current = setInterval(() => {
@@ -181,24 +193,73 @@ export default function LiveTrackingScreen() {
     setAverageSpeed(0);
     startTimeRef.current = null;
     pausedTimeRef.current = 0;
+    actualStartTimeRef.current = null;
   };
 
   const saveActivity = async () => {
-    // TODO: Implement save to AsyncStorage or database
-    const activity = {
-      id: Date.now().toString(),
-      date: new Date().toISOString(),
-      coordinates,
-      distance,
-      duration,
-      averageSpeed,
-      pace: TrackingUtils.calculatePace(distance, duration),
-      elevationGain: TrackingUtils.calculateElevationGain(coordinates),
-      elevationLoss: TrackingUtils.calculateElevationLoss(coordinates),
-    };
+    try {
+      // Calculate avgPaceSecPerKm (seconds per kilometer)
+      const avgPaceSecPerKm = distance > 0 ? duration / (distance / 1000) : 0;
 
-    console.log("Activity saved:", activity);
-    Alert.alert("Success", "Activity saved successfully!");
+      // Convert avgSpeed from km/h to m/s
+      const avgSpeedMps = averageSpeed * (1000 / 3600);
+
+      // Calculate calories
+      const calories = TrackingUtils.calculateCalories(distance);
+
+      // Format GPS points with sequenceIndex
+      const gpsPoints = coordinates.map((coord, index) => ({
+        sequenceIndex: index,
+        latitude: coord.latitude,
+        longitude: coord.longitude,
+        altitude: coord.altitude || 0,
+        timestamp: coord.timestamp
+          ? new Date(coord.timestamp).toISOString()
+          : new Date().toISOString(),
+      }));
+
+      // Prepare workout data
+      const workoutData = {
+        type: "running",
+        startTime: actualStartTimeRef.current || new Date().toISOString(),
+        endTime: new Date().toISOString(),
+        durationSeconds: duration,
+        distanceMeters: Math.round(distance),
+        avgSpeedMps: parseFloat(avgSpeedMps.toFixed(2)),
+        avgPaceSecPerKm: Math.round(avgPaceSecPerKm),
+        calories: calories,
+        gpsPoints: gpsPoints,
+      };
+
+      console.log("Saving workout:", workoutData);
+
+      // Call API
+      const response = await WorkoutService.createWorkout(
+        workoutData,
+        parseInt(userId!, 10)
+      );
+      console.log("Workout saved successfully:", response);
+
+      Alert.alert("Success", "Activity saved successfully!", [
+        {
+          text: "OK",
+          onPress: () => router.back(),
+        },
+      ]);
+    } catch (error: any) {
+      console.error("Error saving workout:", error);
+      Alert.alert(
+        "Error",
+        error?.response?.data?.message ||
+          "Failed to save activity. Please try again.",
+        [
+          {
+            text: "OK",
+            onPress: () => resetTracking(),
+          },
+        ]
+      );
+    }
   };
 
   return (

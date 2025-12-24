@@ -2,13 +2,12 @@ import { CardCollapsible } from "@/components/ui/card-collapsible";
 import ProgressBar from "@/components/ui/progress-bar-h";
 import SedentaryReminder from "@/components/ui/sedentary-reminder";
 import SleepBarChart from "@/components/ui/sleep-bar-chart";
-import { useTheme } from "@/hooks/useTheme";
 import { useStepCounter } from "@/hooks/useStepCounter";
-import { Stack } from "expo-router";
-import { ScrollView, Text, View, ActivityIndicator } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useEffect } from "react";
+import { useTheme } from "@/hooks/useTheme";
 import { registerBackgroundSync } from "@/services/backgroundSync.service";
+import { Stack } from "expo-router";
+import { useEffect } from "react";
+import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 
 export default function HomeScreen() {
   const { isDark } = useTheme();
@@ -21,11 +20,10 @@ export default function HomeScreen() {
   }, []);
 
   return (
-    <SafeAreaView
+    <View
       className={`flex-1 ${
         isDark ? "bg-background-dark" : "bg-background-light"
-      } p-8`}
-      edges={["top"]}
+      } px-8 pt-4`}
     >
       <Stack.Screen
         options={{
@@ -152,6 +150,6 @@ export default function HomeScreen() {
           </CardCollapsible>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }

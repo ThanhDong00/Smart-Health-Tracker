@@ -7,7 +7,6 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Stack, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 // Types
 interface GpsPoint {
@@ -175,11 +174,10 @@ export default function WorkoutScreen() {
   );
 
   return (
-    <SafeAreaView
+    <View
       className={`flex-1 ${
         isDark ? "bg-background-dark" : "bg-background-light"
-      } p-8`}
-      edges={["top"]}
+      } px-8 pt-4`}
     >
       <Stack.Screen
         options={{
@@ -288,6 +286,6 @@ export default function WorkoutScreen() {
           </Text>
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
