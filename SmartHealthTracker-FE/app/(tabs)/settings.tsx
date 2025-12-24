@@ -6,7 +6,6 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router, Stack } from "expo-router";
 import { Alert, ScrollView, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function SettingsScreen() {
   const { isDark } = useTheme();
@@ -31,11 +30,10 @@ export default function SettingsScreen() {
   };
 
   return (
-    <SafeAreaView
+    <View
       className={`flex-1 ${
         isDark ? "bg-background-dark" : "bg-background-light"
-      } p-8`}
-      edges={["top"]}
+      } px-8 pt-4`}
     >
       <Stack.Screen
         options={{
@@ -134,6 +132,6 @@ export default function SettingsScreen() {
           </MenuSection>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }

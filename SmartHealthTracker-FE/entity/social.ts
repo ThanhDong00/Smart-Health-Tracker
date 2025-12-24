@@ -1,14 +1,21 @@
-interface Post {
-  id: string;
-  user: {
-    fullName: string;
-    avartarUrl: string;
-  };
-  createdAt: string;
+export interface Post {
+  id: number;
+  userId: number;
   content: string;
   imageUrl?: string;
-  likeCount?: number;
-  commentCount?: number;
-  visibility?: "PUBLIC";
-  share?: boolean;
+  achievementUserId?: number;
+  createdAt: string;
+  likeCount: number;
+  commentCount: number;
+  likedByMe: boolean;
+  visibility: "PUBLIC" | "PRIVATE";
+  share: boolean;
+}
+
+export interface Comment {
+  id: number;
+  postId: number;
+  userId: number;
+  content: string;
+  createdAt: string;
 }
