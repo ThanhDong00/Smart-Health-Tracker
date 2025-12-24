@@ -1,34 +1,13 @@
 import WorkoutActivityCard from "@/components/ui/workout-activity-card";
 import WorkoutCalendar from "@/components/ui/workout-calendar";
 import WorkoutStatCard from "@/components/ui/workout-stat-card";
+import { Activity } from "@/entity/workout";
 import { useTheme } from "@/hooks/useTheme";
 import { formatDistance, formatPace, getDateString } from "@/utils/formatters";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Stack, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
-
-// Types
-interface GpsPoint {
-  sequenceIndex: number;
-  latitude: number;
-  longitude: number;
-  altitude: number;
-  timestamp: string;
-}
-
-interface Activity {
-  id: string;
-  type: string;
-  startTime: string;
-  endTime: string;
-  durationSeconds: number;
-  distanceMeters: number;
-  avgSpeedMps: number;
-  avgPaceSecPerKm: number;
-  calories: number;
-  gpsPoints: GpsPoint[];
-}
 
 // Mock data - 7 activities in December 2025
 const mockActivities: Activity[] = [

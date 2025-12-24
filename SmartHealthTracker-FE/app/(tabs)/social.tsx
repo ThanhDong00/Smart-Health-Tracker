@@ -1,12 +1,13 @@
-import PostAvatar from "@/components/ui/social/post-avatar";
 import PostCart from "@/components/ui/social/post-card";
 import { useTheme } from "@/hooks/useTheme";
 import { Post, socialService } from "@/services/social.service";
+import { useUserStore } from "@/store/user.store";
 import { router, Stack } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
+  Image,
   RefreshControl,
   Text,
   TouchableOpacity,
@@ -22,6 +23,8 @@ export default function SocialScreen() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
+
+  const { profile } = useUserStore();
 
   // Fetch posts
   const fetchPosts = async (page: number = 0, isRefresh: boolean = false) => {
@@ -144,7 +147,16 @@ export default function SocialScreen() {
           className={`flex-row items-center rounded-2xl p-4 mb-4 ${isDark ? "bg-surface-dark shadow-lg" : "bg-card-light shadow-md"} gap-4`}
         >
           <View className="w-12 h-12 rounded-full overflow-hidden">
-            <PostAvatar />
+            <Image
+              source={
+                profile?.avatarUrl
+                  ? { uri: profile.avatarUrl }
+                  : // : require("../../assets/default-avatar.png")
+                    { uri: "https://i.pravatar.cc/300" }
+              }
+              className="w-full h-full"
+              resizeMode="cover"
+            />
           </View>
           <View className="flex-1">
             <TouchableOpacity

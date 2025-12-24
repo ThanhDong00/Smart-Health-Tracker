@@ -17,3 +17,16 @@ export interface CreateWorkoutDto {
   calories: number;
   gpsPoints: GpsPoint[];
 }
+
+export interface Activity {
+  id: string;
+  type: string;
+  startTime: string;
+  endTime: string;
+  durationSeconds: number;
+  distanceMeters: number;
+  avgSpeedMps: number;
+  avgPaceSecPerKm: number;
+  calories: number;
+  gpsPoints: GpsPoint[];
+}
