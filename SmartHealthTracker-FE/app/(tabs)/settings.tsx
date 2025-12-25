@@ -6,6 +6,7 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router, Stack } from "expo-router";
 import { Alert, ScrollView, View } from "react-native";
+import Toast from "react-native-toast-message";
 
 export default function SettingsScreen() {
   const { isDark } = useTheme();
@@ -22,7 +23,11 @@ export default function SettingsScreen() {
             await signOut();
             router.replace("/welcome");
           } catch (error: any) {
-            Alert.alert("Error", error.message || "Failed to logout");
+            Toast.show({
+              type: "error",
+              text1: "Error",
+              text2: error.message || "Failed to logout",
+            });
           }
         },
       },

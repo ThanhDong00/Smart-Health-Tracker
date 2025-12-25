@@ -10,7 +10,6 @@ import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Image,
   ScrollView,
   Text,
@@ -43,10 +42,11 @@ export default function CreatePostScreen() {
         await ImagePicker.requestMediaLibraryPermissionsAsync();
 
       if (status !== "granted") {
-        Alert.alert(
-          "Permission Required",
-          "Please grant photo library access to upload images"
-        );
+        Toast.show({
+          type: "error",
+          text1: "Permission Required",
+          text2: "Please grant photo library access to upload images",
+        });
         return;
       }
 

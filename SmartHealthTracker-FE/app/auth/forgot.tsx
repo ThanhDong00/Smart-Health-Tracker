@@ -5,7 +5,8 @@ import { useTheme } from "@/hooks/useTheme";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router, Stack } from "expo-router";
 import { useState } from "react";
-import { Alert, Text, View } from "react-native";
+import { Text, View } from "react-native";
+import Toast from "react-native-toast-message";
 
 export default function ForgotPasswordScreen() {
   const { isDark } = useTheme();
@@ -14,19 +15,30 @@ export default function ForgotPasswordScreen() {
 
   const handleSendResetEmail = async () => {
     if (!email) {
-      Alert.alert("Error", "Please enter your email");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Please enter your email",
+      });
       return;
     }
 
     try {
       await sendPasswordReset(email);
-      Alert.alert(
-        "Success",
-        "Password reset email sent. Please check your inbox.",
-        [{ text: "OK", onPress: () => router.back() }]
-      );
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Password reset email sent. Please check your inbox.",
+      });
+      setTimeout(() => {
+        router.back();
+      }, 1500);
     } catch (error: any) {
-      Alert.alert("Error", error.message || "Failed to send reset email");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error.message || "Failed to send reset email",
+      });
     }
   };
 
