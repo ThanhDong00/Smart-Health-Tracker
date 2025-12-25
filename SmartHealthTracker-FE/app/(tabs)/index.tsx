@@ -132,12 +132,12 @@ export default function HomeScreen() {
             </View>
           </CardCollapsible>
 
-          <CardCollapsible
+          {/* <CardCollapsible
             title="Heart Rate"
             subtitle="72 bpm"
             icon="favorite"
             isDark={isDark}
-          />
+          /> */}
 
           {/* Sleep */}
           <CardCollapsible

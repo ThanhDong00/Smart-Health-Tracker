@@ -1,50 +1,156 @@
-# Welcome to your Expo app 👋
+# Smart Health Tracker - Frontend
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A mobile health tracking application built with React Native and Expo. Track your workouts, monitor your health metrics, and stay connected with a fitness community.
 
-## Get started
+## Features
 
-1. Install dependencies
+- **Workout Tracking**: Live tracking with GPS location and real-time statistics
+- **Health Statistics**: Monitor steps, sleep, and activity data
+- **Social Features**: Connect with friends, create groups, and share progress
+- **Sedentary Reminders**: Get notifications to stay active
+- **Theme Support**: Light and dark mode
+- **Secure Authentication**: Firebase authentication with OTP verification
+
+## Prerequisites
+
+Before you begin, ensure you have the following installed:
+
+- **Node.js** (v18 or higher) - [Download](https://nodejs.org/)
+- **npm** or **yarn** - Package manager
+- **Android Studio** - For Android development
+  - Android SDK
+  - Android Emulator or physical device
+- **Expo CLI** - Will be installed with dependencies
+- **Git** - For version control
+
+## Installation
+
+1. **Clone the repository**
+
+   ```bash
+   git clone <repository-url>
+   cd SmartHealthTracker-FE
+   ```
+
+2. **Install dependencies**
 
    ```bash
    npm install
    ```
 
-2. Start the app
+3. **Setup environment variables**
 
-   ```bash
-   npx expo start
+   Create a `.env` file in the root directory and add the following Firebase configuration:
+
+   ```env
+   EXPO_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
+   EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=your_firebase_auth_domain
+   EXPO_PUBLIC_FIREBASE_PROJECT_ID=your_firebase_project_id
+   EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET=your_firebase_storage_bucket
+   EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_firebase_messaging_sender_id
+   EXPO_PUBLIC_FIREBASE_APP_ID=your_firebase_app_id
    ```
 
-In the output, you'll find options to open the app in a
+   > **Note**: Replace the placeholder values with your actual Firebase configuration.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Running the App
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+### Start the Development Server
 
 ```bash
-npm run reset-project
+npx expo start
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+This will start the Expo development server. You'll see a QR code in the terminal.
 
-## Learn more
+### Run on Android
 
-To learn more about developing your project with Expo, look at the following resources:
+Make sure you have an Android emulator running or an Android device connected via USB with USB debugging enabled.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+```bash
+npx expo run:android
+```
 
-## Join the community
+Or press `a` in the terminal after running `npx expo start`.
 
-Join our community of developers creating universal apps.
+## Project Structure
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+```
+app/                    # Application screens
+├── (tabs)/            # Tab navigation screens
+├── auth/              # Authentication screens
+├── settings/          # Settings screens
+├── social/            # Social features screens
+└── workout/           # Workout tracking screens
+
+components/            # Reusable UI components
+├── ui/               # UI-specific components
+└── ...
+
+config/               # Configuration files
+├── axios.ts         # API client setup
+└── firebase.ts      # Firebase configuration
+
+services/             # Business logic and API calls
+store/               # State management (Zustand)
+utils/               # Utility functions
+```
+
+## Key Technologies
+
+- **React Native** - Mobile framework
+- **Expo** - Development platform
+- **TypeScript** - Type safety
+- **Expo Router** - File-based routing
+- **NativeWind** - Tailwind CSS for React Native
+- **Zustand** - State management
+- **Axios** - HTTP client
+- **Firebase** - Authentication
+- **React Native Maps** - Location and mapping
+
+## API Configuration
+
+The app connects to the backend API at:
+
+```
+https://smarthealthtracker-backend.onrender.com/api
+```
+
+This is configured in [config/axios.ts](config/axios.ts).
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Metro bundler issues**
+
+   ```bash
+   npx expo start -c
+   ```
+
+2. **Dependencies issues**
+
+   ```bash
+   rm -rf node_modules
+   npm install
+   ```
+
+3. **Android build issues**
+   ```bash
+   cd android
+   ./gradlew clean
+   cd ..
+   npm run android
+   ```
+
+## Scripts
+
+- `npx expo start` - Start the Expo development server
+
+## License
+
+This project is part of a university coursework for SE405 - Mobile & Pervasive Computing.
+
+## Support
+
+For issues or questions, please contact the development team.
