@@ -1,9 +1,14 @@
 import PostCart from "@/components/ui/social/post-card";
 import { useTheme } from "@/hooks/useTheme";
-import { Post } from "@/services/social.service";
+import { Group, Post, socialService } from "@/services/social.service";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { router, Stack, useLocalSearchParams } from "expo-router";
-import { useCallback, useState } from "react";
+import {
+  router,
+  Stack,
+  useFocusEffect,
+  useLocalSearchParams,
+} from "expo-router";
+import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -18,86 +23,123 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 
-// Mock Group Data
-const MOCK_GROUP = {
-  id: 1,
-  name: "Fitness Lovers",
-  avatarUrl:
-    "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400",
-  memberCount: 45,
-  description: "A community for fitness enthusiasts to share workouts and tips",
-};
-
-// Mock Posts Data
-const MOCK_GROUP_POSTS: Post[] = [
-  {
-    id: 101,
-    user: {
-      id: "1",
-      fullName: "Sarah Johnson",
-      avatarUrl: "https://i.pravatar.cc/300?img=10",
-    },
-    content:
-      "Just completed a 10k run this morning! The weather was perfect. Who else is training for the marathon?",
-    imageUrl:
-      "https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?w=800",
-    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-    likeCount: 15,
-    commentCount: 8,
-    likedByMe: false,
-  },
-  {
-    id: 102,
-    user: {
-      id: "2",
-      fullName: "Mike Chen",
-      avatarUrl: "https://i.pravatar.cc/300?img=12",
-    },
-    content:
-      "New PR on deadlifts today! 💪 Consistency is key. Keep grinding everyone!",
-    createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
-    likeCount: 23,
-    commentCount: 5,
-    likedByMe: true,
-  },
-  {
-    id: 103,
-    user: {
-      id: "3",
-      fullName: "Emily Davis",
-      avatarUrl: "https://i.pravatar.cc/300?img=15",
-    },
-    content:
-      "Tried a new HIIT workout today. My legs are already feeling it 😅 Link to the workout in comments!",
-    imageUrl:
-      "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800",
-    createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-    likeCount: 31,
-    commentCount: 12,
-    likedByMe: false,
-  },
-];
-
 export default function GroupDetailsScreen() {
   const { isDark } = useTheme();
   const { groupId } = useLocalSearchParams();
-  const [posts, setPosts] = useState<Post[]>(MOCK_GROUP_POSTS);
+  const [group, setGroup] = useState<Group | null>(null);
+  const [posts, setPosts] = useState<Post[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [showMenuModal, setShowMenuModal] = useState(false);
   const [showLeaveConfirmModal, setShowLeaveConfirmModal] = useState(false);
 
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+  const [totalPages, setTotalPages] = useState(0);
+  const PAGE_SIZE = 10;
+
+  // Fetch group info
+  const fetchGroupInfo = async () => {
+    try {
+      const response = await socialService.getMyGroups();
+      if (response.data) {
+        const foundGroup = response.data.find(
+          (g) => g.id === Number(groupId)
+        );
+
+        if (foundGroup) {
+          setGroup(foundGroup);
+        } else {
+          Toast.show({
+            type: "error",
+            text1: "Group Not Found",
+            text2: "You are not a member of this group",
+          });
+          setTimeout(() => router.back(), 1500);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching group info:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to load group information",
+      });
+      setTimeout(() => router.back(), 1500);
+    }
+  };
+
+  // Fetch group feed
+  const fetchPosts = async (page: number = 0, isRefresh: boolean = false) => {
+    try {
+      if (page === 0 && !isRefresh) {
+        setIsLoading(true);
+      }
+
+      const response = await socialService.getGroupFeed(
+        Number(groupId),
+        page,
+        PAGE_SIZE
+      );
+
+      if (response.data) {
+        const newPosts = response.data.content;
+
+        if (isRefresh || page === 0) {
+          setPosts(newPosts);
+        } else {
+          setPosts((prev) => [...prev, ...newPosts]);
+        }
+
+        setCurrentPage(page);
+        setHasMore(!response.data.last);
+        setTotalPages(response.data.totalPages);
+      }
+    } catch (error) {
+      console.error("Error fetching group feed:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to load posts",
+      });
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+      setIsLoadingMore(false);
+    }
+  };
+
+  // Initial load - fetch group info first, then posts
+  useEffect(() => {
+    const initializeScreen = async () => {
+      await fetchGroupInfo();
+      await fetchPosts(0);
+    };
+    initializeScreen();
+  }, [groupId]);
+
+  // Refresh when screen comes back into focus (after creating post)
+  useFocusEffect(
+    useCallback(() => {
+      // Refresh feed when coming back to this screen
+      if (posts.length > 0) {
+        fetchPosts(0, true);
+      }
+    }, [])
+  );
+
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsRefreshing(false);
-      Toast.show({
-        type: "success",
-        text1: "Refreshed",
-        text2: "Posts updated successfully",
-      });
-    }, 1000);
+    await fetchPosts(0, true);
+  };
+
+  const handleLoadMore = () => {
+    if (!isLoadingMore && hasMore && !isLoading) {
+      setIsLoadingMore(true);
+      fetchPosts(currentPage + 1);
+    }
   };
 
   const handleCommentPress = (postId: number) => {
@@ -105,7 +147,14 @@ export default function GroupDetailsScreen() {
   };
 
   const handleCreatePost = () => {
-    router.push("/social/create-post");
+    if (!group) return;
+    router.push({
+      pathname: "/social/create-post",
+      params: {
+        groupId: groupId,
+        groupName: group.name,
+      },
+    });
   };
 
   const handleMenuPress = () => {
@@ -165,6 +214,18 @@ export default function GroupDetailsScreen() {
     </View>
   );
 
+  const renderFooter = () => {
+    if (!isLoadingMore) return null;
+    return (
+      <View className="py-4">
+        <ActivityIndicator
+          size="small"
+          color={isDark ? "#00b894" : "#7f27ff"}
+        />
+      </View>
+    );
+  };
+
   return (
     <SafeAreaView
       className={`flex-1 ${
@@ -175,7 +236,7 @@ export default function GroupDetailsScreen() {
       <Stack.Screen
         options={{
           headerShown: true,
-          title: MOCK_GROUP.name,
+          title: group?.name || "Group",
           headerTitleStyle: {
             fontWeight: "bold",
           },
@@ -198,34 +259,36 @@ export default function GroupDetailsScreen() {
 
       <View className="flex-1 px-8 pt-4">
         {/* Group Header */}
-        <View
-          className={`rounded-2xl p-4 mb-4 ${isDark ? "bg-surface-dark shadow-lg" : "bg-card-light shadow-md"}`}
-        >
-          <View className="flex-row items-center">
-            {/* Group Avatar */}
-            <View className="w-16 h-16 rounded-full overflow-hidden border-2 border-primary">
-              <Image
-                source={{ uri: MOCK_GROUP.avatarUrl }}
-                className="w-full h-full"
-                resizeMode="cover"
-              />
-            </View>
+        {group && (
+          <View
+            className={`rounded-2xl p-4 mb-4 ${isDark ? "bg-surface-dark shadow-lg" : "bg-card-light shadow-md"}`}
+          >
+            <View className="flex-row items-center">
+              {/* Group Avatar */}
+              <View className="w-16 h-16 rounded-full overflow-hidden border-2 border-primary">
+                <Image
+                  source={require("../../../assets/images/group.png")}
+                  className="w-full h-full"
+                  resizeMode="cover"
+                />
+              </View>
 
-            {/* Group Info */}
-            <View className="flex-1 ml-4">
-              <Text
-                className={`text-xl font-bold ${isDark ? "text-text-primary" : "text-text-dark"}`}
-              >
-                {MOCK_GROUP.name}
-              </Text>
-              <Text
-                className={`text-sm mt-1 ${isDark ? "text-text-secondary" : "text-text-muted"}`}
-              >
-                {MOCK_GROUP.memberCount} members
-              </Text>
+              {/* Group Info */}
+              <View className="flex-1 ml-4">
+                <Text
+                  className={`text-xl font-bold ${isDark ? "text-text-primary" : "text-text-dark"}`}
+                >
+                  {group.name}
+                </Text>
+                <Text
+                  className={`text-sm mt-1 ${isDark ? "text-text-secondary" : "text-text-muted"}`}
+                >
+                  {group.memberCount} members
+                </Text>
+              </View>
             </View>
           </View>
-        </View>
+        )}
 
         {/* Create Post Card */}
         <View
@@ -280,7 +343,10 @@ export default function GroupDetailsScreen() {
               />
             }
             ListEmptyComponent={renderEmpty}
+            ListFooterComponent={renderFooter}
             ItemSeparatorComponent={() => <View className="h-4" />}
+            onEndReached={handleLoadMore}
+            onEndReachedThreshold={0.5}
           />
         )}
       </View>
@@ -410,7 +476,7 @@ export default function GroupDetailsScreen() {
             <Text
               className={`text-base text-center mb-6 ${isDark ? "text-text-secondary" : "text-text-muted"}`}
             >
-              Are you sure you want to leave {MOCK_GROUP.name}? You can always
+              Are you sure you want to leave {group?.name}? You can always
               rejoin later.
             </Text>
 

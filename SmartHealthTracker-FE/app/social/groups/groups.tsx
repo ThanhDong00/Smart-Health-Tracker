@@ -1,153 +1,130 @@
 import { useTheme } from "@/hooks/useTheme";
-import { router, Stack } from "expo-router";
-import { useState } from "react";
 import {
+  Group,
+  GroupInvitation,
+  socialService,
+} from "@/services/social.service";
+import { router, Stack } from "expo-router";
+import { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
   FlatList,
   Image,
   RefreshControl,
-  ScrollView,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
-
-// Mock data types
-interface Group {
-  id: number;
-  name: string;
-  avatarUrl: string;
-  memberCount: number;
-  postCount: number;
-  isPrivate: boolean;
-}
-
-interface GroupInvitation {
-  id: number;
-  group: Group;
-  invitedBy: {
-    name: string;
-    avatar: string;
-  };
-  invitedAt: string;
-}
-
-// Mock data
-const MOCK_JOINED_GROUPS: Group[] = [
-  {
-    id: 1,
-    name: "Fitness Lovers",
-    avatarUrl: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400",
-    memberCount: 45,
-    postCount: 128,
-    isPrivate: false,
-  },
-  {
-    id: 2,
-    name: "Gym Buddies",
-    avatarUrl: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=400",
-    memberCount: 23,
-    postCount: 67,
-    isPrivate: true,
-  },
-  {
-    id: 3,
-    name: "Morning Runners",
-    avatarUrl: "https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?w=400",
-    memberCount: 89,
-    postCount: 234,
-    isPrivate: false,
-  },
-  {
-    id: 4,
-    name: "Yoga & Meditation",
-    avatarUrl: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400",
-    memberCount: 56,
-    postCount: 145,
-    isPrivate: false,
-  },
-];
-
-const MOCK_INVITATIONS: GroupInvitation[] = [
-  {
-    id: 1,
-    group: {
-      id: 5,
-      name: "Cycling Team",
-      avatarUrl: "https://images.unsplash.com/photo-1517649763962-0c623066013b?w=400",
-      memberCount: 34,
-      postCount: 89,
-      isPrivate: false,
-    },
-    invitedBy: {
-      name: "John Doe",
-      avatar: "https://i.pravatar.cc/100?img=1",
-    },
-    invitedAt: "2h ago",
-  },
-  {
-    id: 2,
-    group: {
-      id: 6,
-      name: "Healthy Eating",
-      avatarUrl: "https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=400",
-      memberCount: 78,
-      postCount: 201,
-      isPrivate: true,
-    },
-    invitedBy: {
-      name: "Jane Smith",
-      avatar: "https://i.pravatar.cc/100?img=2",
-    },
-    invitedAt: "1d ago",
-  },
-];
 
 export default function GroupsScreen() {
   const { isDark } = useTheme();
   const [activeTab, setActiveTab] = useState<"joined" | "invited">("joined");
-  const [joinedGroups, setJoinedGroups] = useState<Group[]>(
-    MOCK_JOINED_GROUPS
-  );
-  const [invitations, setInvitations] =
-    useState<GroupInvitation[]>(MOCK_INVITATIONS);
+  const [joinedGroups, setJoinedGroups] = useState<Group[]>([]);
+  const [invitations, setInvitations] = useState<GroupInvitation[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsRefreshing(false);
+  // Fetch my groups
+  const fetchMyGroups = async () => {
+    try {
+      const response = await socialService.getMyGroups();
+      if (response.data) {
+        setJoinedGroups(response.data);
+      }
+    } catch (error: any) {
+      console.error("Error fetching my groups:", error);
       Toast.show({
-        type: "success",
-        text1: "Refreshed",
-        text2: "Groups updated successfully",
-      });
-    }, 1000);
-  };
-
-  const handleAcceptInvitation = (invitationId: number) => {
-    const invitation = invitations.find((inv) => inv.id === invitationId);
-    if (invitation) {
-      setJoinedGroups((prev) => [...prev, invitation.group]);
-      setInvitations((prev) => prev.filter((inv) => inv.id !== invitationId));
-      Toast.show({
-        type: "success",
-        text1: "Accepted",
-        text2: `You joined ${invitation.group.name}`,
+        type: "error",
+        text1: "Error",
+        text2: error?.response?.data?.message || "Failed to load groups",
       });
     }
   };
 
-  const handleDeclineInvitation = (invitationId: number) => {
-    const invitation = invitations.find((inv) => inv.id === invitationId);
-    setInvitations((prev) => prev.filter((inv) => inv.id !== invitationId));
-    Toast.show({
-      type: "info",
-      text1: "Declined",
-      text2: `Invitation to ${invitation?.group.name} declined`,
-    });
+  // Fetch pending invitations
+  const fetchPendingInvitations = async () => {
+    try {
+      const response = await socialService.getPendingInvitations();
+      if (response.data) {
+        setInvitations(response.data);
+      }
+    } catch (error: any) {
+      console.error("Error fetching invitations:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error?.response?.data?.message || "Failed to load invitations",
+      });
+    }
+  };
+
+  // Fetch all data
+  const fetchData = async (showLoading = true) => {
+    try {
+      if (showLoading) setIsLoading(true);
+      await Promise.all([fetchMyGroups(), fetchPendingInvitations()]);
+    } finally {
+      if (showLoading) setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await fetchData(false);
+  };
+
+  const handleAcceptInvitation = async (inviteId: number) => {
+    try {
+      const invitation = invitations.find((inv) => inv.inviteId === inviteId);
+
+      await socialService.acceptInvitation(inviteId);
+
+      // Refresh data after accepting
+      await fetchData(false);
+
+      Toast.show({
+        type: "success",
+        text1: "Accepted",
+        text2: `You joined ${invitation?.groupName || "the group"}`,
+      });
+    } catch (error: any) {
+      console.error("Error accepting invitation:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error?.response?.data?.message || "Failed to accept invitation",
+      });
+    }
+  };
+
+  const handleDeclineInvitation = async (inviteId: number) => {
+    try {
+      const invitation = invitations.find((inv) => inv.inviteId === inviteId);
+
+      await socialService.declineInvitation(inviteId);
+
+      // Remove from local state
+      setInvitations((prev) => prev.filter((inv) => inv.inviteId !== inviteId));
+
+      Toast.show({
+        type: "info",
+        text1: "Declined",
+        text2: `Invitation to ${invitation?.groupName || "the group"} declined`,
+      });
+    } catch (error: any) {
+      console.error("Error declining invitation:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error?.response?.data?.message || "Failed to decline invitation",
+      });
+    }
   };
 
   const handleGroupPress = (groupId: number) => {
@@ -156,6 +133,15 @@ export default function GroupsScreen() {
 
   const handleCreateGroup = () => {
     router.push("/social/groups/create-group");
+  };
+
+  const formatDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
   };
 
   const renderGroupCard = ({ item }: { item: Group }) => (
@@ -167,7 +153,7 @@ export default function GroupsScreen() {
         {/* Group Avatar */}
         <View className="w-16 h-16 rounded-full overflow-hidden border-2 border-primary">
           <Image
-            source={{ uri: item.avatarUrl }}
+            source={require("../../../assets/images/group.png")}
             className="w-full h-full"
             resizeMode="cover"
           />
@@ -183,7 +169,7 @@ export default function GroupsScreen() {
           <Text
             className={`text-sm mt-1 ${isDark ? "text-text-secondary" : "text-text-muted"}`}
           >
-            {item.memberCount} members • {item.postCount} posts
+            {item.memberCount} members
           </Text>
         </View>
 
@@ -205,7 +191,7 @@ export default function GroupsScreen() {
         {/* Group Avatar */}
         <View className="w-16 h-16 rounded-full overflow-hidden border-2 border-primary">
           <Image
-            source={{ uri: item.group.avatarUrl }}
+            source={require("../../../assets/images/group.png")}
             className="w-full h-full"
             resizeMode="cover"
           />
@@ -216,33 +202,40 @@ export default function GroupsScreen() {
           <Text
             className={`text-lg font-semibold ${isDark ? "text-text-primary" : "text-text-dark"}`}
           >
-            {item.group.name}
+            {item.groupName}
           </Text>
-          <Text
-            className={`text-sm mt-1 ${isDark ? "text-text-secondary" : "text-text-muted"}`}
-          >
-            {item.group.memberCount} members
-          </Text>
+          {item.groupDescription && (
+            <Text
+              className={`text-sm mt-1 ${isDark ? "text-text-secondary" : "text-text-muted"}`}
+              numberOfLines={2}
+            >
+              {item.groupDescription}
+            </Text>
+          )}
         </View>
       </View>
 
       {/* Invited By */}
       <View className="flex-row items-center mb-3">
         <Image
-          source={{ uri: item.invitedBy.avatar }}
+          source={
+            item.invitedBy.avatarUrl
+              ? { uri: item.invitedBy.avatarUrl }
+              : require("../../../assets/images/person.png")
+          }
           className="w-6 h-6 rounded-full"
         />
         <Text
           className={`text-sm ml-2 ${isDark ? "text-text-secondary" : "text-text-muted"}`}
         >
-          Invited by {item.invitedBy.name} • {item.invitedAt}
+          Invited by {item.invitedBy.fullName} • {formatDate(item.createdAt)}
         </Text>
       </View>
 
       {/* Action Buttons */}
       <View className="flex-row gap-3">
         <TouchableOpacity
-          onPress={() => handleAcceptInvitation(item.id)}
+          onPress={() => handleAcceptInvitation(item.inviteId)}
           className={`flex-1 py-3 rounded-xl ${isDark ? "bg-primary-dark" : "bg-primary"}`}
         >
           <Text
@@ -252,7 +245,7 @@ export default function GroupsScreen() {
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          onPress={() => handleDeclineInvitation(item.id)}
+          onPress={() => handleDeclineInvitation(item.inviteId)}
           className={`flex-1 py-3 rounded-xl ${isDark ? "bg-surface-light/10 border border-border-light" : "bg-gray-100 border border-gray-300"}`}
         >
           <Text
@@ -286,11 +279,16 @@ export default function GroupsScreen() {
   );
 
   return (
-    <SafeAreaView
+    // <SafeAreaView
+    //   className={`flex-1 ${
+    //     isDark ? "bg-background-dark" : "bg-background-light"
+    //   }`}
+    //   edges={["top"]}
+    // >
+    <View
       className={`flex-1 ${
         isDark ? "bg-background-dark" : "bg-background-light"
       }`}
-      edges={["top"]}
     >
       <Stack.Screen
         options={{
@@ -364,7 +362,14 @@ export default function GroupsScreen() {
 
         {/* Content */}
         <View className="flex-1 px-8 pt-4">
-          {activeTab === "joined" ? (
+          {isLoading ? (
+            <View className="flex-1 items-center justify-center py-20">
+              <ActivityIndicator
+                size="large"
+                color={isDark ? "#00b894" : "#7f27ff"}
+              />
+            </View>
+          ) : activeTab === "joined" ? (
             <FlatList
               data={joinedGroups}
               renderItem={renderGroupCard}
@@ -384,7 +389,7 @@ export default function GroupsScreen() {
             <FlatList
               data={invitations}
               renderItem={renderInvitationCard}
-              keyExtractor={(item) => item.id.toString()}
+              keyExtractor={(item) => item.inviteId.toString()}
               showsVerticalScrollIndicator={false}
               contentContainerStyle={{ paddingBottom: 100 }}
               refreshControl={
@@ -420,6 +425,8 @@ export default function GroupsScreen() {
       </View>
 
       <Toast />
-    </SafeAreaView>
+    </View>
+
+    // </SafeAreaView>
   );
 }
