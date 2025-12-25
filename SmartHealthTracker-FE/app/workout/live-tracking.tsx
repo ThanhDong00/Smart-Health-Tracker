@@ -9,6 +9,7 @@ import { useEffect, useRef, useState } from "react";
 import { Alert, Platform, Text, TouchableOpacity, View } from "react-native";
 import MapView, { Marker, Polyline, PROVIDER_DEFAULT } from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Toast from "react-native-toast-message";
 
 export default function LiveTrackingScreen() {
   const router = useRouter();
@@ -46,10 +47,11 @@ export default function LiveTrackingScreen() {
     if (hasPermission) {
       getCurrentLocation();
     } else {
-      Alert.alert(
-        "Permission Required",
-        "Location permission is required to use this feature."
-      );
+      Toast.show({
+        type: "error",
+        text1: "Permission Required",
+        text2: "Location permission is required to use this feature.",
+      });
     }
   };
 
@@ -69,7 +71,11 @@ export default function LiveTrackingScreen() {
       }
     } catch (error) {
       console.error("Error getting location:", error);
-      Alert.alert("Error", "Could not get your current location");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Could not get your current location",
+      });
     }
   };
 
@@ -242,25 +248,24 @@ export default function LiveTrackingScreen() {
       );
       console.log("Workout saved successfully:", response);
 
-      Alert.alert("Success", "Activity saved successfully!", [
-        {
-          text: "OK",
-          onPress: () => router.back(),
-        },
-      ]);
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Activity saved successfully!",
+      });
+      setTimeout(() => {
+        router.back();
+      }, 1000);
     } catch (error: any) {
       console.error("Error saving workout:", error);
-      Alert.alert(
-        "Error",
-        error?.response?.data?.message ||
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2:
+          error?.response?.data?.message ||
           "Failed to save activity. Please try again.",
-        [
-          {
-            text: "OK",
-            onPress: () => resetTracking(),
-          },
-        ]
-      );
+      });
+      resetTracking();
     }
   };
 

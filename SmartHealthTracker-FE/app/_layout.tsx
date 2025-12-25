@@ -16,6 +16,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
 import { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 export const unstable_settings = {
   anchor: "(tabs)",
@@ -83,10 +84,12 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
-      <RootLayoutNav />
-      <StatusBar style="auto" />
-      <Toast />
-    </ThemeProvider>
+    <SafeAreaProvider>
+      <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
+        <StatusBar style={isDark ? "light" : "dark"} />
+        <RootLayoutNav />
+        <Toast />
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }

@@ -6,11 +6,10 @@ import { socialService } from "@/services/social.service";
 import { useUserStore } from "@/store/user.store";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import * as ImagePicker from "expo-image-picker";
-import { Stack, useRouter } from "expo-router";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Image,
   ScrollView,
   Text,
@@ -18,18 +17,23 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 
 export default function CreatePostScreen() {
   const { isDark } = useTheme();
   const router = useRouter();
+  const params = useLocalSearchParams();
   const [content, setContent] = useState("");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const { profile } = useUserStore();
   const userName = profile ? `${profile.fullName}` : "User";
+
+  // Group posting info
+  const groupId = params.groupId ? Number(params.groupId) : undefined;
+  const groupName = params.groupName ? String(params.groupName) : undefined;
+  const isPostingToGroup = !!groupId && !!groupName;
 
   const handleAddPhoto = async () => {
     try {
@@ -38,10 +42,11 @@ export default function CreatePostScreen() {
         await ImagePicker.requestMediaLibraryPermissionsAsync();
 
       if (status !== "granted") {
-        Alert.alert(
-          "Permission Required",
-          "Please grant photo library access to upload images"
-        );
+        Toast.show({
+          type: "error",
+          text1: "Permission Required",
+          text2: "Please grant photo library access to upload images",
+        });
         return;
       }
 
@@ -99,13 +104,16 @@ export default function CreatePostScreen() {
       await socialService.createPost({
         content: content.trim(),
         imageUrl,
-        visibility: "PUBLIC",
+        visibility: isPostingToGroup ? "GROUP" : "PUBLIC",
+        groupId: isPostingToGroup ? groupId : null,
       });
 
       Toast.show({
         type: "success",
         text1: "Success",
-        text2: "Post created successfully!",
+        text2: isPostingToGroup
+          ? "Posted to group successfully!"
+          : "Post created successfully!",
       });
 
       // Reset form and navigate back
@@ -113,7 +121,7 @@ export default function CreatePostScreen() {
       setSelectedImage(null);
       // Wait a moment to show the toast
       setTimeout(() => {
-        router.push("/(tabs)/social");
+        router.back();
       }, 500);
     } catch (error: any) {
       console.error("Error creating post:", error);
@@ -129,7 +137,7 @@ export default function CreatePostScreen() {
   };
 
   return (
-    <SafeAreaView
+    <View
       className={`flex-1 ${
         isDark ? "bg-background-dark" : "bg-background-light"
       }`}
@@ -148,6 +156,30 @@ export default function CreatePostScreen() {
           headerTintColor: isDark ? "#ffffff" : "#1e293b",
         }}
       />
+
+      {/* Group Banner */}
+      {isPostingToGroup && (
+        <View
+          className={`mx-6 mt-4 mb-2 p-3 rounded-xl flex-row items-center gap-2 ${
+            isDark
+              ? "bg-primary/20 border border-primary/30"
+              : "bg-primary/10 border border-primary/20"
+          }`}
+        >
+          <MaterialIcons
+            name="group"
+            size={20}
+            color={isDark ? "#00b894" : "#7f27ff"}
+          />
+          <Text
+            className={`text-sm font-semibold ${
+              isDark ? "text-primary" : "text-primary-dark"
+            }`}
+          >
+            Posting to: {groupName}
+          </Text>
+        </View>
+      )}
 
       <ScrollView className="flex-1 p-6">
         {/* User Avatar & Name */}
@@ -248,6 +280,6 @@ export default function CreatePostScreen() {
       </View>
 
       <Toast />
-    </SafeAreaView>
+    </View>
   );
 }

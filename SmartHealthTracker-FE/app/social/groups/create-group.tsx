@@ -1,5 +1,6 @@
 import PrimaryButton from "@/components/primary-button";
 import { useTheme } from "@/hooks/useTheme";
+import { socialService } from "@/services/social.service";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router, Stack } from "expo-router";
 import { useState } from "react";
@@ -21,42 +22,10 @@ export default function CreateGroupScreen() {
   const { isDark } = useTheme();
   const [groupName, setGroupName] = useState("");
   const [description, setDescription] = useState("");
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const MAX_NAME_LENGTH = 50;
   const MAX_DESCRIPTION_LENGTH = 200;
-
-  const handleSelectImage = () => {
-    Alert.alert("Select Group Avatar", "Choose an option", [
-      {
-        text: "Cancel",
-        style: "cancel",
-      },
-      {
-        text: "Choose from Gallery",
-        onPress: () => {
-          // Mock: simulate image selection
-          setSelectedImage(
-            "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800"
-          );
-          Toast.show({
-            type: "success",
-            text1: "Image Selected",
-            text2: "Group avatar updated",
-          });
-        },
-      },
-    ]);
-  };
-
-  const handleRemoveImage = () => {
-    setSelectedImage(null);
-    Toast.show({
-      type: "info",
-      text1: "Image Removed",
-      text2: "Default avatar will be used",
-    });
-  };
 
   const validateForm = (): boolean => {
     if (!groupName.trim()) {
@@ -98,20 +67,37 @@ export default function CreateGroupScreen() {
     return true;
   };
 
-  const handleCreateGroup = () => {
+  const handleCreateGroup = async () => {
     if (!validateForm()) return;
 
-    // Mock: simulate API call
-    Toast.show({
-      type: "success",
-      text1: "Group Created!",
-      text2: `${groupName} has been created successfully`,
-    });
+    try {
+      setIsSubmitting(true);
 
-    // Navigate back to Groups screen
-    setTimeout(() => {
-      router.back();
-    }, 1000);
+      const response = await socialService.createGroup({
+        name: groupName.trim(),
+        description: description.trim() || undefined,
+      });
+
+      Toast.show({
+        type: "success",
+        text1: "Group Created!",
+        text2: `${response.data.name} has been created successfully`,
+      });
+
+      // Navigate back to Groups screen
+      setTimeout(() => {
+        router.push("/social/groups");
+      }, 1000);
+    } catch (error: any) {
+      console.error("Error creating group:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error?.response?.data?.message || "Failed to create group",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -141,66 +127,6 @@ export default function CreateGroupScreen() {
         className="flex-1"
       >
         <ScrollView className="flex-1 px-8 pt-6">
-          {/* Group Avatar Section */}
-          <View className="items-center mb-8">
-            <View className="relative">
-              {/* Avatar Image */}
-              <View className="w-32 h-32 rounded-full overflow-hidden border-4 border-primary">
-                <Image
-                  source={
-                    selectedImage
-                      ? { uri: selectedImage }
-                      : require("../../../assets/images/group.png")
-                  }
-                  className="w-full h-full"
-                  resizeMode="cover"
-                />
-              </View>
-
-              {/* Edit Button */}
-              <TouchableOpacity
-                onPress={handleSelectImage}
-                className={`absolute bottom-0 right-0 w-10 h-10 rounded-full items-center justify-center ${isDark ? "bg-primary-dark" : "bg-primary"}`}
-                style={{
-                  elevation: 4,
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.25,
-                  shadowRadius: 3.84,
-                }}
-              >
-                <MaterialIcons
-                  name="camera-alt"
-                  size={20}
-                  color={isDark ? "#ffffff" : "#ffffff"}
-                />
-              </TouchableOpacity>
-
-              {/* Remove Button (only show if image selected) */}
-              {selectedImage && (
-                <TouchableOpacity
-                  onPress={handleRemoveImage}
-                  className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-red-500 items-center justify-center"
-                  style={{
-                    elevation: 4,
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.25,
-                    shadowRadius: 3.84,
-                  }}
-                >
-                  <MaterialIcons name="close" size={16} color="#ffffff" />
-                </TouchableOpacity>
-              )}
-            </View>
-
-            <Text
-              className={`text-sm mt-3 ${isDark ? "text-text-secondary" : "text-text-muted"}`}
-            >
-              Tap to add group photo
-            </Text>
-          </View>
-
           {/* Group Name Input */}
           <View className="mb-6">
             <View className="flex-row items-center justify-between mb-2">
@@ -304,9 +230,9 @@ export default function CreateGroupScreen() {
         {/* Create Button */}
         <View className="px-8 py-6 pt-4">
           <PrimaryButton
-            title="Create Group"
+            title={isSubmitting ? "Creating..." : "Create Group"}
             onPress={handleCreateGroup}
-            disabled={!groupName.trim() || groupName.trim().length < 3}
+            disabled={!groupName.trim() || groupName.trim().length < 3 || isSubmitting}
             isDark={isDark}
           />
         </View>
