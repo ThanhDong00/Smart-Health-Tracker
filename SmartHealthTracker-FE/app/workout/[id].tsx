@@ -1,4 +1,6 @@
+import { Activity } from "@/entity/workout";
 import { useTheme } from "@/hooks/useTheme";
+import { WorkoutService } from "@/services/workout.service";
 import {
   formatDateTimeFull,
   formatDistance,
@@ -8,112 +10,166 @@ import {
 } from "@/utils/formatters";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  RefreshControl,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import MapView, { Polyline, PROVIDER_GOOGLE } from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Toast from "react-native-toast-message";
 
-// Mock data (same as workout.tsx - in production, fetch from storage)
-const mockActivities = [
-  {
-    id: "1",
-    type: "running",
-    startTime: "2024-12-24T18:30:00.000Z",
-    endTime: "2024-12-24T19:58:10.000Z",
-    durationSeconds: 5290,
-    distanceMeters: 5200,
-    avgSpeedMps: 2.98,
-    avgPaceSecPerKm: 335,
-    calories: 145,
-    gpsPoints: [],
-  },
-  {
-    id: "2",
-    type: "running",
-    startTime: "2024-12-22T08:00:00.000Z",
-    endTime: "2024-12-22T08:18:45.000Z",
-    durationSeconds: 1125,
-    distanceMeters: 3100,
-    avgSpeedMps: 2.76,
-    avgPaceSecPerKm: 362,
-    calories: 134,
-    gpsPoints: [],
-  },
-  {
-    id: "3",
-    type: "running",
-    startTime: "2024-12-17T18:15:00.000Z",
-    endTime: "2024-12-17T19:13:20.000Z",
-    durationSeconds: 3500,
-    distanceMeters: 10500,
-    avgSpeedMps: 3.0,
-    avgPaceSecPerKm: 333,
-    calories: 352,
-    gpsPoints: [],
-  },
-  {
-    id: "4",
-    type: "running",
-    startTime: "2024-12-15T07:00:00.000Z",
-    endTime: "2024-12-15T07:42:30.000Z",
-    durationSeconds: 2550,
-    distanceMeters: 7200,
-    avgSpeedMps: 2.82,
-    avgPaceSecPerKm: 354,
-    calories: 248,
-    gpsPoints: [],
-  },
-  {
-    id: "5",
-    type: "running",
-    startTime: "2024-12-10T17:30:00.000Z",
-    endTime: "2024-12-10T18:15:45.000Z",
-    durationSeconds: 2745,
-    distanceMeters: 8000,
-    avgSpeedMps: 2.91,
-    avgPaceSecPerKm: 343,
-    calories: 276,
-    gpsPoints: [],
-  },
-  {
-    id: "6",
-    type: "running",
-    startTime: "2024-12-07T06:00:00.000Z",
-    endTime: "2024-12-07T06:21:15.000Z",
-    durationSeconds: 1275,
-    distanceMeters: 4100,
-    avgSpeedMps: 3.22,
-    avgPaceSecPerKm: 311,
-    calories: 141,
-    gpsPoints: [],
-  },
-  {
-    id: "7",
-    type: "running",
-    startTime: "2024-12-03T18:45:00.000Z",
-    endTime: "2024-12-03T19:50:30.000Z",
-    durationSeconds: 3930,
-    distanceMeters: 12000,
-    avgSpeedMps: 3.05,
-    avgPaceSecPerKm: 328,
-    calories: 414,
-    gpsPoints: [],
-  },
-];
+// Map backend workout response to Activity interface
+const mapWorkoutToActivity = (workout: any): Activity => ({
+  id: workout.id.toString(),
+  type: workout.type.toLowerCase(),
+  startTime: workout.startTime,
+  endTime: workout.endTime,
+  durationSeconds: workout.durationSeconds,
+  distanceMeters: workout.distanceMeters,
+  avgSpeedMps: workout.avgSpeedMps,
+  avgPaceSecPerKm: workout.avgPaceSecPerKm,
+  calories: workout.calories,
+  gpsPoints: workout.gpsPoints || [],
+});
 
 export default function ActivityDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { isDark } = useTheme();
 
-  const activity = mockActivities.find((a) => a.id === id);
+  const [activity, setActivity] = useState<Activity | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const mapRef = useRef<MapView>(null);
 
-  if (!activity) {
+  // Fetch workout detail
+  const fetchWorkout = async (showLoading = true) => {
+    try {
+      if (showLoading) setIsLoading(true);
+      setError(null);
+
+      const response = await WorkoutService.getWorkoutById(id as string);
+      const mappedActivity = mapWorkoutToActivity(response);
+      setActivity(mappedActivity);
+    } catch (error: any) {
+      console.error("Error fetching workout:", error);
+      const errorMessage =
+        error?.response?.data?.message || "Failed to load workout";
+      setError(errorMessage);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: errorMessage,
+      });
+    } finally {
+      if (showLoading) setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchWorkout();
+  }, [id]);
+
+  // Handle pull to refresh
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    fetchWorkout(false);
+  };
+
+  // Handle delete with confirmation
+  const handleDelete = () => {
+    Alert.alert(
+      "Delete Activity",
+      "Are you sure you want to delete this activity?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => {
+            Toast.show({
+              type: "info",
+              text1: "Not Available",
+              text2: "This feature is not available yet",
+            });
+          },
+        },
+      ]
+    );
+  };
+
+  // Handle share action
+  const handleSharePress = () => {
+    Toast.show({
+      type: "info",
+      text1: "Not Available",
+      text2: "This feature is not available yet",
+    });
+  };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <SafeAreaView
+        className={`flex-1 ${
+          isDark ? "bg-background-dark" : "bg-background-light"
+        } items-center justify-center`}
+      >
+        <Stack.Screen
+          options={{
+            headerShown: true,
+            title: "Activity Details",
+            headerStyle: {
+              backgroundColor: isDark ? "#0f0f23" : "#f8fafc",
+            },
+            headerTintColor: isDark ? "#ffffff" : "#1e293b",
+            headerTitleStyle: {
+              fontWeight: "bold",
+            },
+            headerShadowVisible: false,
+          }}
+        />
+        <ActivityIndicator
+          size="large"
+          color={isDark ? "#00b894" : "#7f27ff"}
+        />
+      </SafeAreaView>
+    );
+  }
+
+  // Error state
+  if (error || !activity) {
     return (
       <SafeAreaView
         className={`flex-1 ${
           isDark ? "bg-background-dark" : "bg-background-light"
         } items-center justify-center p-8`}
       >
-        <Stack.Screen options={{ headerShown: false }} />
+        <Stack.Screen
+          options={{
+            headerShown: true,
+            title: "Activity Details",
+            headerStyle: {
+              backgroundColor: isDark ? "#0f0f23" : "#f8fafc",
+            },
+            headerTintColor: isDark ? "#ffffff" : "#1e293b",
+            headerTitleStyle: {
+              fontWeight: "bold",
+            },
+            headerShadowVisible: false,
+          }}
+        />
         <MaterialIcons
           name="error-outline"
           size={64}
@@ -124,27 +180,43 @@ export default function ActivityDetailScreen() {
             isDark ? "text-text-primary" : "text-text-dark"
           }`}
         >
-          Activity not found
+          {error || "Activity not found"}
         </Text>
-        <TouchableOpacity
-          className={`mt-6 px-6 py-3 rounded-full flex-row items-center justify-center shadow-lg active:scale-[0.98] transition-all ${
-            isDark ? "bg-primary" : "bg-primary shadow-primary/20"
-          }`}
-          onPress={() => router.back()}
-        >
-          <MaterialIcons
-            name="arrow-back"
-            size={20}
-            color={isDark ? "#ffffff" : "#1e293b"}
-          />
-          <Text
-            className={`font-semibold ml-2 ${
-              isDark ? "text-background-light" : "text-text-dark"
+        <View className="flex-row gap-3 mt-6">
+          <TouchableOpacity
+            className={`px-6 py-3 rounded-full flex-row items-center justify-center shadow-lg active:scale-[0.98] ${
+              isDark ? "bg-primary" : "bg-primary shadow-primary/20"
             }`}
+            onPress={() => fetchWorkout()}
           >
-            Go Back
-          </Text>
-        </TouchableOpacity>
+            <MaterialIcons name="refresh" size={20} color="#ffffff" />
+            <Text className="font-semibold ml-2 text-background-light">
+              Retry
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            className={`px-6 py-3 rounded-full flex-row items-center justify-center shadow-lg active:scale-[0.98] ${
+              isDark
+                ? "bg-surface-dark"
+                : "bg-card-light shadow-surface-light/20"
+            }`}
+            onPress={() => router.back()}
+          >
+            <MaterialIcons
+              name="arrow-back"
+              size={20}
+              color={isDark ? "#ffffff" : "#1e293b"}
+            />
+            <Text
+              className={`font-semibold ml-2 ${
+                isDark ? "text-text-primary" : "text-text-dark"
+              }`}
+            >
+              Go Back
+            </Text>
+          </TouchableOpacity>
+        </View>
+        <Toast />
       </SafeAreaView>
     );
   }
@@ -174,6 +246,13 @@ export default function ActivityDetailScreen() {
         className="flex-1"
         contentContainerStyle={{ paddingBottom: 100 }}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
+            tintColor={isDark ? "#00b894" : "#7f27ff"}
+          />
+        }
       >
         {/* Main Stats */}
         <View className="py-6">
@@ -390,7 +469,7 @@ export default function ActivityDetailScreen() {
             </View>
           </View>
 
-          {/* Map Placeholder Card */}
+          {/* Map Card */}
           <View
             className={`rounded-2xl p-4 mb-4 shadow-lg ${
               isDark ? "bg-surface-dark" : "bg-card-light"
@@ -403,33 +482,83 @@ export default function ActivityDetailScreen() {
             >
               Route
             </Text>
-            <View
-              className={`rounded-xl h-64 items-center justify-center ${
-                isDark
-                  ? "bg-surface-variant-dark"
-                  : "bg-surface-light shadow-inner"
+            {activity.gpsPoints.length > 0 ? (
+              <View className="rounded-xl overflow-hidden h-64">
+                <MapView
+                  ref={mapRef}
+                  provider={PROVIDER_GOOGLE}
+                  style={{ flex: 1 }}
+                  initialRegion={{
+                    latitude: activity.gpsPoints[0].latitude,
+                    longitude: activity.gpsPoints[0].longitude,
+                    latitudeDelta: 0.01,
+                    longitudeDelta: 0.01,
+                  }}
+                  mapType="standard"
+                  showsUserLocation={false}
+                  showsMyLocationButton={false}
+                  pitchEnabled={false}
+                  rotateEnabled={false}
+                  onMapReady={() => {
+                    // Fit to coordinates after map is ready
+                    const coordinates = activity.gpsPoints.map((point) => ({
+                      latitude: point.latitude,
+                      longitude: point.longitude,
+                    }));
+                    if (coordinates.length > 0 && mapRef.current) {
+                      setTimeout(() => {
+                        mapRef.current?.fitToCoordinates(coordinates, {
+                          edgePadding: {
+                            top: 50,
+                            right: 50,
+                            bottom: 50,
+                            left: 50,
+                          },
+                          animated: true,
+                        });
+                      }, 100);
+                    }
+                  }}
+                >
+                  <Polyline
+                    coordinates={activity.gpsPoints.map((point) => ({
+                      latitude: point.latitude,
+                      longitude: point.longitude,
+                    }))}
+                    strokeColor={isDark ? "#00b894" : "#7f27ff"}
+                    strokeWidth={8}
+                  />
+                </MapView>
+              </View>
+            ) : (
+              <View
+                className={`rounded-xl h-64 items-center justify-center ${
+                  isDark
+                    ? "bg-surface-variant-dark"
+                    : "bg-surface-light shadow-inner"
+                }`}
+              >
+                <MaterialIcons
+                  name="location-off"
+                  size={64}
+                  color={isDark ? "#a6adc8" : "#64748b"}
+                />
+                <Text
+                  className={`mt-4 ${
+                    isDark ? "text-text-secondary" : "text-text-muted"
+                  }`}
+                >
+                  No GPS data recorded
+                </Text>
+              </View>
+            )}
+            <Text
+              className={`text-sm mt-2 text-center ${
+                isDark ? "text-text-disabled" : "text-text-muted"
               }`}
             >
-              <MaterialIcons
-                name="map"
-                size={64}
-                color={isDark ? `#00b894` : `#7f27ff`}
-              />
-              <Text
-                className={`mt-4 ${
-                  isDark ? "text-text-secondary" : "text-text-muted"
-                }`}
-              >
-                Map view coming soon
-              </Text>
-              <Text
-                className={`text-sm mt-2 ${
-                  isDark ? "text-text-disabled" : "text-text-muted"
-                }`}
-              >
-                {activity.gpsPoints.length} GPS points recorded
-              </Text>
-            </View>
+              {activity.gpsPoints.length} GPS points recorded
+            </Text>
           </View>
 
           {/* Additional Info Card */}
@@ -500,13 +629,14 @@ export default function ActivityDetailScreen() {
         </View>
 
         {/* Action Buttons */}
-        <View className="pb-6 gap-3">
+        <View className="pb-6 gap-4">
           <TouchableOpacity
             className={`rounded-full py-4 flex-row items-center justify-center shadow-xl active:scale-[0.98] transition-all ${
               isDark
                 ? "bg-surface-dark shadow-surface-dark/50 active:bg-surface-variant-dark"
                 : "bg-card-light shadow-lg active:bg-surface-light"
             }`}
+            onPress={handleSharePress}
           >
             <MaterialIcons
               name="share"
@@ -528,6 +658,7 @@ export default function ActivityDetailScreen() {
                 ? "bg-destructive-dark border-destructive-dark active:bg-destructive-hover-dark"
                 : "bg-destructive-light border-destructive-light active:bg-destructive-hover-light"
             }`}
+            onPress={handleDelete}
           >
             <MaterialIcons name="delete-outline" size={20} color="#ef4444" />
             <Text className={`text-base font-semibold ml-2 text-destructive`}>
@@ -536,6 +667,7 @@ export default function ActivityDetailScreen() {
           </TouchableOpacity>
         </View>
       </ScrollView>
+      <Toast />
     </SafeAreaView>
   );
 }

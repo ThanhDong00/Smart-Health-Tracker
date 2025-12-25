@@ -2,7 +2,8 @@ import { MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Audio } from "expo-av";
 import { useEffect, useRef, useState } from "react";
-import { Alert, Text, TouchableOpacity, Vibration, View } from "react-native";
+import { Text, TouchableOpacity, Vibration, View } from "react-native";
+import Toast from "react-native-toast-message";
 
 type SedentaryReminderProps = {
   isDark?: boolean;
@@ -108,16 +109,13 @@ const SedentaryReminder = ({ isDark }: SedentaryReminderProps) => {
         if (prev <= 1) {
           stopTimer();
           playNotification();
-          Alert.alert(
-            "Time to Move!",
-            "Stand up and stretch to keep your streak!",
-            [
-              {
-                text: "OK",
-                onPress: () => stopNotification(),
-              },
-            ]
-          );
+          Toast.show({
+            type: "info",
+            text1: "Time to Move!",
+            text2: "Stand up and stretch to keep your streak!",
+            onPress: () => stopNotification(),
+            visibilityTime: 5000,
+          });
           return 0;
         }
         return prev - 1;

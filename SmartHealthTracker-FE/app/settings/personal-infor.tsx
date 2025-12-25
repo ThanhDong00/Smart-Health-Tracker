@@ -4,7 +4,6 @@ import { Stack } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Image,
   ScrollView,
   Text,
@@ -12,6 +11,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Toast from "react-native-toast-message";
 
 import PrimaryButton from "@/components/primary-button";
 import DobInputField from "@/components/ui/dob-input-field";
@@ -122,7 +122,11 @@ export default function PersonalInforScreen() {
       form.height &&
       (isNaN(Number(form.height)) || Number(form.height) <= 0)
     ) {
-      Alert.alert("Validation Error", "Height must be a positive number");
+      Toast.show({
+        type: "error",
+        text1: "Validation Error",
+        text2: "Height must be a positive number",
+      });
       return false;
     }
 
@@ -131,13 +135,21 @@ export default function PersonalInforScreen() {
       form.weight &&
       (isNaN(Number(form.weight)) || Number(form.weight) <= 0)
     ) {
-      Alert.alert("Validation Error", "Weight must be a positive number");
+      Toast.show({
+        type: "error",
+        text1: "Validation Error",
+        text2: "Weight must be a positive number",
+      });
       return false;
     }
 
     // Validate date of birth (not in future)
     if (form.dateOfBirth && form.dateOfBirth > new Date()) {
-      Alert.alert("Validation Error", "Date of birth cannot be in the future");
+      Toast.show({
+        type: "error",
+        text1: "Validation Error",
+        text2: "Date of birth cannot be in the future",
+      });
       return false;
     }
 
@@ -151,10 +163,12 @@ export default function PersonalInforScreen() {
         await ImagePicker.requestMediaLibraryPermissionsAsync();
 
       if (!permissionResult.granted) {
-        Alert.alert(
-          "Permission Required",
-          "Please allow access to your photo library to upload an avatar"
-        );
+        Toast.show({
+          type: "error",
+          text1: "Permission Required",
+          text2:
+            "Please allow access to your photo library to upload an avatar",
+        });
         return;
       }
 
@@ -179,10 +193,11 @@ export default function PersonalInforScreen() {
       );
 
       if (!isValidSize) {
-        Alert.alert(
-          "File Too Large",
-          "Please select an image smaller than 5MB"
-        );
+        Toast.show({
+          type: "error",
+          text1: "File Too Large",
+          text2: "Please select an image smaller than 5MB",
+        });
         return;
       }
 
@@ -199,16 +214,25 @@ export default function PersonalInforScreen() {
       if (response.status === 200) {
         // Update profile in store
         setProfile(response.data);
-        Alert.alert("Success", "Avatar updated successfully");
+        Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: "Avatar updated successfully",
+        });
       } else {
-        Alert.alert("Error", response.message || "Failed to update avatar");
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: response.message || "Failed to update avatar",
+        });
       }
     } catch (error: any) {
       console.error("Avatar upload error:", error);
-      Alert.alert(
-        "Upload Failed",
-        error.message || "An error occurred while uploading the avatar"
-      );
+      Toast.show({
+        type: "error",
+        text1: "Upload Failed",
+        text2: error.message || "An error occurred while uploading the avatar",
+      });
     } finally {
       setIsUploadingAvatar(false);
     }
@@ -237,15 +261,24 @@ export default function PersonalInforScreen() {
         setProfile(response.data);
         setIsEditing(false);
 
-        Alert.alert("Success", "Profile updated successfully");
+        Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: "Profile updated successfully",
+        });
       } else {
-        Alert.alert("Error", response.message || "Failed to update profile");
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: response.message || "Failed to update profile",
+        });
       }
     } catch (error: any) {
-      Alert.alert(
-        "Error",
-        error.message || "An error occurred while updating profile"
-      );
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error.message || "An error occurred while updating profile",
+      });
     } finally {
       setIsLoading(false);
     }

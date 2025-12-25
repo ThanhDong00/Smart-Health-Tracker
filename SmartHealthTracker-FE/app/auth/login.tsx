@@ -6,7 +6,8 @@ import { useTheme } from "@/hooks/useTheme";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router, Stack } from "expo-router";
 import { useState } from "react";
-import { Alert, Pressable, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
+import Toast from "react-native-toast-message";
 
 export default function LoginScreen() {
   const { isDark } = useTheme();
@@ -23,7 +24,11 @@ export default function LoginScreen() {
 
   const handleSignIn = async () => {
     if (!signInForm.email || !signInForm.password) {
-      Alert.alert("Error", "Please fill in all fields");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Please fill in all fields",
+      });
       return;
     }
 
@@ -31,7 +36,11 @@ export default function LoginScreen() {
       await signIn(signInForm.email, signInForm.password, rememberMe);
       router.replace("/(tabs)");
     } catch (error: any) {
-      Alert.alert("Error", error.message || "Failed to sign in");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error.message || "Failed to sign in",
+      });
     }
   };
 

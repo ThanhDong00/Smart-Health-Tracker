@@ -6,7 +6,8 @@ import { useTheme } from "@/hooks/useTheme";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router, Stack } from "expo-router";
 import { useState } from "react";
-import { Alert, Pressable, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
+import Toast from "react-native-toast-message";
 
 export default function SignupScreen() {
   const { isDark } = useTheme();
@@ -28,17 +29,29 @@ export default function SignupScreen() {
       !signupForm.password ||
       !signupForm.confirmPassword
     ) {
-      Alert.alert("Error", "Please fill in all fields");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Please fill in all fields",
+      });
       return;
     }
 
     if (signupForm.password !== signupForm.confirmPassword) {
-      Alert.alert("Error", "Passwords do not match");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Passwords do not match",
+      });
       return;
     }
 
     if (signupForm.password.length < 6) {
-      Alert.alert("Error", "Password must be at least 6 characters");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Password must be at least 6 characters",
+      });
       return;
     }
 
@@ -46,7 +59,11 @@ export default function SignupScreen() {
       await signUp(signupForm.email, signupForm.password);
       router.replace("/(tabs)");
     } catch (error: any) {
-      Alert.alert("Error", error.message || "Failed to sign up");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error.message || "Failed to sign up",
+      });
     }
   };
 

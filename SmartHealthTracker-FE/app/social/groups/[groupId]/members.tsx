@@ -1,170 +1,190 @@
 import { useTheme } from "@/hooks/useTheme";
+import { GroupMember, socialService } from "@/services/social.service";
+import { useUserStore } from "@/store/user.store";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { Stack } from "expo-router";
-import { useState } from "react";
+import { Stack, useLocalSearchParams } from "expo-router";
+import { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   FlatList,
   Image,
+  RefreshControl,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-// Mock Member Data
-interface Member {
-  id: string;
-  fullName: string;
-  avatarUrl: string;
-  role: "admin" | "member";
-  joinedAt: string;
-}
-
-const MOCK_MEMBERS: Member[] = [
-  // Admins
-  {
-    id: "1",
-    fullName: "John Doe",
-    avatarUrl: "https://i.pravatar.cc/300?img=1",
-    role: "admin",
-    joinedAt: "6 months ago",
-  },
-  {
-    id: "2",
-    fullName: "Sarah Johnson",
-    avatarUrl: "https://i.pravatar.cc/300?img=10",
-    role: "admin",
-    joinedAt: "6 months ago",
-  },
-  // Members
-  {
-    id: "3",
-    fullName: "Mike Chen",
-    avatarUrl: "https://i.pravatar.cc/300?img=12",
-    role: "member",
-    joinedAt: "5 months ago",
-  },
-  {
-    id: "4",
-    fullName: "Emily Davis",
-    avatarUrl: "https://i.pravatar.cc/300?img=15",
-    role: "member",
-    joinedAt: "4 months ago",
-  },
-  {
-    id: "5",
-    fullName: "Alex Thompson",
-    avatarUrl: "https://i.pravatar.cc/300?img=20",
-    role: "member",
-    joinedAt: "3 months ago",
-  },
-  {
-    id: "6",
-    fullName: "Jessica Lee",
-    avatarUrl: "https://i.pravatar.cc/300?img=25",
-    role: "member",
-    joinedAt: "3 months ago",
-  },
-  {
-    id: "7",
-    fullName: "David Brown",
-    avatarUrl: "https://i.pravatar.cc/300?img=30",
-    role: "member",
-    joinedAt: "2 months ago",
-  },
-  {
-    id: "8",
-    fullName: "Lisa Anderson",
-    avatarUrl: "https://i.pravatar.cc/300?img=35",
-    role: "member",
-    joinedAt: "2 months ago",
-  },
-  {
-    id: "9",
-    fullName: "James Wilson",
-    avatarUrl: "https://i.pravatar.cc/300?img=40",
-    role: "member",
-    joinedAt: "1 month ago",
-  },
-  {
-    id: "10",
-    fullName: "Maria Garcia",
-    avatarUrl: "https://i.pravatar.cc/300?img=45",
-    role: "member",
-    joinedAt: "1 month ago",
-  },
-  {
-    id: "11",
-    fullName: "Robert Taylor",
-    avatarUrl: "https://i.pravatar.cc/300?img=50",
-    role: "member",
-    joinedAt: "3 weeks ago",
-  },
-  {
-    id: "12",
-    fullName: "Jennifer Martinez",
-    avatarUrl: "https://i.pravatar.cc/300?img=55",
-    role: "member",
-    joinedAt: "2 weeks ago",
-  },
-  {
-    id: "13",
-    fullName: "William Clark",
-    avatarUrl: "https://i.pravatar.cc/300?img=60",
-    role: "member",
-    joinedAt: "2 weeks ago",
-  },
-  {
-    id: "14",
-    fullName: "Linda Rodriguez",
-    avatarUrl: "https://i.pravatar.cc/300?img=65",
-    role: "member",
-    joinedAt: "1 week ago",
-  },
-  {
-    id: "15",
-    fullName: "Michael White",
-    avatarUrl: "https://i.pravatar.cc/300?img=70",
-    role: "member",
-    joinedAt: "5 days ago",
-  },
-  {
-    id: "16",
-    fullName: "Patricia Harris",
-    avatarUrl: "https://i.pravatar.cc/300?img=75",
-    role: "member",
-    joinedAt: "3 days ago",
-  },
-  {
-    id: "17",
-    fullName: "Christopher Lewis",
-    avatarUrl: "https://i.pravatar.cc/300?img=80",
-    role: "member",
-    joinedAt: "2 days ago",
-  },
-];
+import Toast from "react-native-toast-message";
 
 export default function GroupMembersScreen() {
   const { isDark } = useTheme();
+  const { groupId } = useLocalSearchParams<{ groupId: string }>();
+  const { profile } = useUserStore();
+  const [members, setMembers] = useState<GroupMember[]>([]);
+  const [filteredMembers, setFilteredMembers] = useState<GroupMember[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
 
-  // Filter members by search query
-  const filteredMembers = MOCK_MEMBERS.filter((member) =>
-    member.fullName.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Fetch group members
+  const fetchMembers = async (showLoading = true) => {
+    try {
+      if (showLoading) setIsLoading(true);
 
-  const admins = filteredMembers.filter((m) => m.role === "admin");
-  const members = filteredMembers.filter((m) => m.role === "member");
+      const response = await socialService.getGroupMembers(Number(groupId));
 
-  const renderMemberCard = ({ item }: { item: Member }) => (
+      if (response.data) {
+        setMembers(response.data);
+        setFilteredMembers(response.data);
+
+        // Find current user's role
+        const currentMember = response.data.find(
+          (m) => m.user.id === Number(profile?.id)
+        );
+        if (currentMember) {
+          setCurrentUserRole(currentMember.role);
+        }
+      }
+    } catch (error: any) {
+      console.error("Error fetching members:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error?.response?.data?.message || "Failed to load members",
+      });
+    } finally {
+      if (showLoading) setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMembers();
+  }, [groupId]);
+
+  // Handle search
+  useEffect(() => {
+    if (searchQuery.trim() === "") {
+      setFilteredMembers(members);
+    } else {
+      const filtered = members.filter((member) =>
+        member.user.fullName.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      setFilteredMembers(filtered);
+    }
+  }, [searchQuery, members]);
+
+  // Handle refresh
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    fetchMembers(false);
+  };
+
+  // Format date
+  const formatJoinedDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    return `Joined ${date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    })}`;
+  };
+
+  // Handle remove member
+  const handleRemoveMember = (member: GroupMember) => {
+    // Check if current user can remove
+    if (currentUserRole !== "OWNER" && currentUserRole !== "ADMIN") {
+      Toast.show({
+        type: "error",
+        text1: "Permission Denied",
+        text2: "Only owners and admins can remove members",
+      });
+      return;
+    }
+
+    // Can't remove owner
+    if (member.role === "OWNER") {
+      Toast.show({
+        type: "error",
+        text1: "Cannot Remove",
+        text2: "Group owner cannot be removed",
+      });
+      return;
+    }
+
+    // Can't remove yourself
+    if (member.user.id === Number(profile?.id)) {
+      Toast.show({
+        type: "error",
+        text1: "Cannot Remove",
+        text2: "You cannot remove yourself",
+      });
+      return;
+    }
+
+    Alert.alert(
+      "Remove Member",
+      `Are you sure you want to remove ${member.user.fullName} from this group?`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Remove",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await socialService.removeMember(Number(groupId), member.user.id);
+
+              // Remove from local state
+              setMembers((prev) =>
+                prev.filter((m) => m.user.id !== member.user.id)
+              );
+
+              Toast.show({
+                type: "success",
+                text1: "Member Removed",
+                text2: `${member.user.fullName} has been removed`,
+              });
+            } catch (error: any) {
+              console.error("Error removing member:", error);
+              Toast.show({
+                type: "error",
+                text1: "Error",
+                text2:
+                  error?.response?.data?.message || "Failed to remove member",
+              });
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  // Separate members by role
+  const owners = filteredMembers.filter((m) => m.role === "OWNER");
+  const admins = filteredMembers.filter((m) => m.role === "ADMIN");
+  const regularMembers = filteredMembers.filter((m) => m.role === "MEMBER");
+  const sortedMembers = [...owners, ...admins, ...regularMembers];
+
+  const renderMember = ({ item }: { item: GroupMember }) => (
     <View
-      className={`flex-row items-center p-4 mb-3 rounded-2xl ${isDark ? "bg-surface-dark" : "bg-card-light"}`}
+      className={`flex-row items-center p-4 rounded-2xl mb-3 ${
+        isDark ? "bg-surface-dark shadow-lg" : "bg-card-light shadow-md"
+      }`}
     >
       {/* Avatar */}
-      <View className="w-14 h-14 rounded-full overflow-hidden border-2 border-primary">
+      <View className="w-14 h-14 rounded-full overflow-hidden">
         <Image
-          source={{ uri: item.avatarUrl }}
+          source={
+            item.user.avatarUrl
+              ? { uri: item.user.avatarUrl }
+              : require("../../../../assets/images/person.png")
+          }
           className="w-full h-full"
           resizeMode="cover"
         />
@@ -174,49 +194,54 @@ export default function GroupMembersScreen() {
       <View className="flex-1 ml-4">
         <View className="flex-row items-center gap-2">
           <Text
-            className={`text-base font-semibold ${isDark ? "text-text-primary" : "text-text-dark"}`}
+            className={`text-base font-semibold ${
+              isDark ? "text-text-primary" : "text-text-dark"
+            }`}
           >
-            {item.fullName}
+            {item.user.fullName}
           </Text>
-          {item.role === "admin" && (
+          {item.role === "OWNER" && (
             <View
-              className={`px-2 py-1 rounded-full ${isDark ? "bg-primary-dark/20" : "bg-primary/20"}`}
+              className={`px-2 py-1 rounded-full ${
+                isDark ? "bg-primary-dark/20" : "bg-primary/20"
+              }`}
             >
               <Text
-                className={`text-xs font-semibold ${isDark ? "text-primary-dark" : "text-primary"}`}
+                className={`text-xs font-semibold ${
+                  isDark ? "text-primary-dark" : "text-primary"
+                }`}
               >
-                Admin
+                OWNER
               </Text>
             </View>
           )}
         </View>
         <Text
-          className={`text-sm mt-1 ${isDark ? "text-text-secondary" : "text-text-muted"}`}
+          className={`text-sm mt-1 ${
+            isDark ? "text-text-secondary" : "text-text-muted"
+          }`}
         >
-          Joined {item.joinedAt}
+          {formatJoinedDate(item.joinedAt)}
         </Text>
       </View>
 
-      {/* Arrow Icon */}
-      <MaterialIcons
-        name="chevron-right"
-        size={24}
-        color={isDark ? "#6b7280" : "#9ca3af"}
-      />
+      {/* Remove Button (only for owner/admin, not for owner members) */}
+      {(currentUserRole === "OWNER" || currentUserRole === "ADMIN") &&
+        item.role !== "OWNER" &&
+        item.user.id !== Number(profile?.id) && (
+          <TouchableOpacity
+            onPress={() => handleRemoveMember(item)}
+            className={`p-2 rounded-full ${
+              isDark ? "bg-red-500/10" : "bg-red-50"
+            }`}
+          >
+            <MaterialIcons name="person-remove" size={20} color="#ef4444" />
+          </TouchableOpacity>
+        )}
     </View>
   );
 
-  const renderSectionHeader = (title: string, count: number) => (
-    <View className="mb-3 mt-2">
-      <Text
-        className={`text-lg font-bold ${isDark ? "text-text-primary" : "text-text-dark"}`}
-      >
-        {title} ({count})
-      </Text>
-    </View>
-  );
-
-  const renderEmptyState = () => (
+  const renderEmpty = () => (
     <View className="flex-1 items-center justify-center py-20">
       <MaterialIcons
         name="search-off"
@@ -224,12 +249,16 @@ export default function GroupMembersScreen() {
         color={isDark ? "#6b7280" : "#9ca3af"}
       />
       <Text
-        className={`text-lg font-medium mt-4 ${isDark ? "text-text-primary" : "text-text-dark"}`}
+        className={`text-lg font-medium mt-4 ${
+          isDark ? "text-text-primary" : "text-text-dark"
+        }`}
       >
         No members found
       </Text>
       <Text
-        className={`text-sm mt-2 ${isDark ? "text-text-secondary" : "text-text-muted"}`}
+        className={`text-sm mt-2 ${
+          isDark ? "text-text-secondary" : "text-text-muted"
+        }`}
       >
         Try a different search term
       </Text>
@@ -246,7 +275,7 @@ export default function GroupMembersScreen() {
       <Stack.Screen
         options={{
           headerShown: true,
-          title: `Members (${MOCK_MEMBERS.length})`,
+          title: "Members",
           headerTitleStyle: {
             fontWeight: "bold",
           },
@@ -261,15 +290,21 @@ export default function GroupMembersScreen() {
       <View className="flex-1 px-8 pt-4">
         {/* Search Bar */}
         <View
-          className={`flex-row items-center rounded-xl px-4 mb-4 ${isDark ? "bg-surface-dark border border-surface-variant-dark" : "bg-white border border-gray-200"}`}
+          className={`flex-row items-center rounded-xl px-4 py-3 mb-4 ${
+            isDark
+              ? "bg-surface-dark border border-surface-variant-dark"
+              : "bg-white border border-gray-200"
+          }`}
         >
           <MaterialIcons
             name="search"
             size={20}
-            color={isDark ? "#6b7280" : "#9ca3af"}
+            color={isDark ? "#9ca3af" : "#6b7280"}
           />
           <TextInput
-            className={`flex-1 py-3 px-3 text-base ${isDark ? "text-text-primary" : "text-text-dark"}`}
+            className={`flex-1 ml-3 text-base ${
+              isDark ? "text-text-primary" : "text-text-dark"
+            }`}
             placeholder="Search members..."
             placeholderTextColor={isDark ? "#6b7280" : "#9ca3af"}
             value={searchQuery}
@@ -280,41 +315,59 @@ export default function GroupMembersScreen() {
               <MaterialIcons
                 name="close"
                 size={20}
-                color={isDark ? "#6b7280" : "#9ca3af"}
+                color={isDark ? "#9ca3af" : "#6b7280"}
               />
             </TouchableOpacity>
           )}
         </View>
 
+        {/* Member Count */}
+        {!isLoading && (
+          <Text
+            className={`text-sm mb-3 ${
+              isDark ? "text-text-secondary" : "text-text-muted"
+            }`}
+          >
+            {filteredMembers.length}{" "}
+            {filteredMembers.length === 1 ? "member" : "members"}
+          </Text>
+        )}
+
         {/* Members List */}
-        {filteredMembers.length === 0 ? (
-          renderEmptyState()
+        {isLoading ? (
+          <View className="flex-1 items-center justify-center">
+            <ActivityIndicator
+              size="large"
+              color={isDark ? "#00b894" : "#7f27ff"}
+            />
+            <Text
+              className={`mt-4 text-base ${
+                isDark ? "text-text-secondary" : "text-text-muted"
+              }`}
+            >
+              Loading members...
+            </Text>
+          </View>
         ) : (
           <FlatList
-            data={[
-              { type: "header", key: "admins-header" },
-              ...admins.map((m) => ({ type: "admin", key: m.id, data: m })),
-              { type: "header", key: "members-header" },
-              ...members.map((m) => ({ type: "member", key: m.id, data: m })),
-            ]}
-            renderItem={({ item }) => {
-              if (item.type === "header") {
-                if (item.key === "admins-header" && admins.length > 0) {
-                  return renderSectionHeader("Admins", admins.length);
-                }
-                if (item.key === "members-header" && members.length > 0) {
-                  return renderSectionHeader("Members", members.length);
-                }
-                return null;
-              }
-              return renderMemberCard({ item: item.data as Member });
-            }}
-            keyExtractor={(item) => item.key}
+            data={sortedMembers}
+            renderItem={renderMember}
+            keyExtractor={(item) => item.user.id.toString()}
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: 100 }}
+            contentContainerStyle={{ paddingBottom: 20 }}
+            refreshControl={
+              <RefreshControl
+                refreshing={isRefreshing}
+                onRefresh={handleRefresh}
+                tintColor={isDark ? "#00b894" : "#7f27ff"}
+              />
+            }
+            ListEmptyComponent={renderEmpty}
           />
         )}
       </View>
+
+      <Toast />
     </SafeAreaView>
   );
 }
