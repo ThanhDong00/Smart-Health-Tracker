@@ -4,7 +4,6 @@ const STORAGE_KEYS = {
   USER: "user",
   TOKEN: "token",
   REFRESH_TOKEN: "refresh_token",
-  REMEMBER_ME: "remember_me",
 } as const;
 
 export const secureStorageService = {
@@ -60,34 +59,12 @@ export const secureStorageService = {
     }
   },
 
-  async saveRememberMe(rememberMe: boolean): Promise<void> {
-    try {
-      await SecureStore.setItemAsync(
-        STORAGE_KEYS.REMEMBER_ME,
-        rememberMe.toString()
-      );
-    } catch (error) {
-      console.error("Error saving remember me:", error);
-    }
-  },
-
-  async getRememberMe(): Promise<boolean> {
-    try {
-      const value = await SecureStore.getItemAsync(STORAGE_KEYS.REMEMBER_ME);
-      return value === "true";
-    } catch (error) {
-      console.error("Error getting remember me:", error);
-      return false;
-    }
-  },
-
   async clearAll(): Promise<void> {
     try {
       await Promise.all([
         SecureStore.deleteItemAsync(STORAGE_KEYS.USER),
         SecureStore.deleteItemAsync(STORAGE_KEYS.TOKEN),
         SecureStore.deleteItemAsync(STORAGE_KEYS.REFRESH_TOKEN),
-        SecureStore.deleteItemAsync(STORAGE_KEYS.REMEMBER_ME),
       ]);
     } catch (error) {
       console.error("Error clearing storage:", error);

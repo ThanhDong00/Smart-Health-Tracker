@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { Dimensions, ScrollView, View, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { BarChart, LineChart } from "react-native-gifted-charts";
+import { BarChart } from "react-native-gifted-charts";
 
 const MOCK_DATA = {
   healthScore: 85,
@@ -43,9 +43,6 @@ export default function StatsScreen() {
       <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
         <View className="px-6 py-4 gap-6">
           <View className="gap-1">
-            <Text className="text-2xl font-bold text-neutral-900">
-              Statistics
-            </Text>
             <Text className="text-base text-neutral-500">
               {MOCK_DATA.subtitle}
             </Text>
@@ -104,33 +101,6 @@ export default function StatsScreen() {
               hideRules
               hideYAxisText
               yAxisLabelSuffix=""
-            />
-          </View>
-
-          <View className="rounded-2xl bg-white border border-neutral-100 p-4 shadow-sm">
-            <Text className="text-lg font-semibold text-neutral-900 mb-3">
-              Heart Rate Trend
-            </Text>
-            <LineChart
-              data={MOCK_DATA.heartRateTrend}
-              height={200}
-              width={chartWidth}
-              isAnimated
-              color="#ef4444"
-              thickness={3}
-              hideDataPoints={false}
-              dataPointsColor="#ef4444"
-              startFillColor="#fecdd3"
-              endFillColor="#fff1f2"
-              startOpacity={0.35}
-              endOpacity={0}
-              initialSpacing={12}
-              spacing={28}
-              curved
-              hideRules
-              hideYAxisText
-              xAxisThickness={0}
-              yAxisThickness={0}
             />
           </View>
         </View>

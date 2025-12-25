@@ -21,12 +21,4 @@ export const UserService = {
     console.log("Update profile response:", JSON.stringify(response.data));
     return response.data;
   },
-
-  updateAvatar: async (data: {
-    avatarUrl: string;
-  }): Promise<ApiResponse<UserProfile>> => {
-    const response = await apiClient.post("/auth/me/avatar", data);
-    console.log("Update avatar response:", JSON.stringify(response.data));
-    return response.data;
-  },
 };

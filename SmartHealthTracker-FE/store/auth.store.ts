@@ -14,11 +14,7 @@ interface AuthState {
 
   setUser: (user: User | null) => void;
   setToken: (token: string | null) => void;
-  signIn: (
-    email: string,
-    password: string,
-    rememberMe?: boolean
-  ) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   sendPasswordReset: (email: string) => Promise<void>;
@@ -47,21 +43,14 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ token });
   },
 
-  signIn: async (email, password, rememberMe = false) => {
+  signIn: async (email, password) => {
     try {
       set({ isLoading: true });
       const user = await authService.signIn(email, password);
       const token = await user.getIdToken();
 
-      // Only save to secure storage if remember me is checked
-      if (rememberMe) {
-        await secureStorageService.saveUser(user);
-        await secureStorageService.saveToken(token);
-        await secureStorageService.saveRememberMe(true);
-      } else {
-        // Clear any previous remember me data
-        await secureStorageService.clearAll();
-      }
+      await secureStorageService.saveUser(user);
+      await secureStorageService.saveToken(token);
 
       set({
         user,
@@ -120,9 +109,6 @@ export const useAuthStore = create<AuthState>((set) => ({
       await authService.signOut();
       await secureStorageService.clearAll();
 
-      // Clear user profile from store
-      useUserStore.getState().clearProfile();
-
       set({
         user: null,
         token: null,
@@ -147,47 +133,51 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   initialize: async () => {
-    const state = useAuthStore.getState();
-
-    // Only run once - if already initialized, skip
-    if (state.isInitialized) {
-      return;
-    }
-
     try {
       set({ isLoading: true });
 
-      const [savedUser, savedToken, rememberMe] = await Promise.all([
+      const [savedUser, savedToken] = await Promise.all([
         secureStorageService.getUser(),
         secureStorageService.getToken(),
-        secureStorageService.getRememberMe(),
       ]);
 
-      // Only restore session if remember me was checked
-      if (savedUser && savedToken && rememberMe) {
-        set({
-          user: savedUser,
-          token: savedToken,
-          isAuthenticated: true,
-          isLoading: false,
-          isInitialized: true,
-        });
+      if (savedUser && savedToken) {
+        const currentUser = authService.getCurrentUser();
+        if (currentUser) {
+          const newToken = await currentUser.getIdToken(true);
+          await secureStorageService.saveToken(newToken);
 
-        // Load profile from backend in background
-        try {
-          const profile = await UserService.getUserProfile();
-          useUserStore.getState().setProfile(profile.data);
-        } catch (error) {
-          console.error("Failed to load user profile:", error);
+          set({
+            user: currentUser,
+            token: newToken,
+            isAuthenticated: true,
+            isLoading: false,
+            isInitialized: true,
+          });
+
+          // Load profile from be
+          try {
+            const profile = await UserService.getUserProfile();
+            useUserStore.getState().setProfile(profile.data);
+          } catch (error) {
+            console.error("Failed to load user profile:", error);
+          }
+        } else {
+          await secureStorageService.clearAll();
+
+          set({
+            user: null,
+            token: null,
+            isAuthenticated: false,
+            isLoading: false,
+            isInitialized: true,
+          });
         }
-
-        // Refresh token in background if needed
-        // Firebase onAuthStateChanged will handle token refresh
       } else {
-        // No remember me - just mark as initialized
-        // DON'T clear current session (if user just logged in without remember me)
-        // DON'T sign out from Firebase (if user is currently logged in)
         set({
+          user: null,
+          token: null,
+          isAuthenticated: false,
           isLoading: false,
           isInitialized: true,
         });
