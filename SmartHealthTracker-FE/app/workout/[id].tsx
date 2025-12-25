@@ -109,6 +109,15 @@ export default function ActivityDetailScreen() {
     );
   };
 
+  // Handle share action
+  const handleSharePress = () => {
+    Toast.show({
+      type: "info",
+      text1: "Not Available",
+      text2: "This feature is not available yet",
+    });
+  };
+
   // Loading state
   if (isLoading) {
     return (
@@ -620,13 +629,14 @@ export default function ActivityDetailScreen() {
         </View>
 
         {/* Action Buttons */}
-        <View className="pb-6">
-          {/* <TouchableOpacity
+        <View className="pb-6 gap-4">
+          <TouchableOpacity
             className={`rounded-full py-4 flex-row items-center justify-center shadow-xl active:scale-[0.98] transition-all ${
               isDark
                 ? "bg-surface-dark shadow-surface-dark/50 active:bg-surface-variant-dark"
                 : "bg-card-light shadow-lg active:bg-surface-light"
             }`}
+            onPress={handleSharePress}
           >
             <MaterialIcons
               name="share"
@@ -640,7 +650,7 @@ export default function ActivityDetailScreen() {
             >
               Share Activity
             </Text>
-          </TouchableOpacity> */}
+          </TouchableOpacity>
 
           <TouchableOpacity
             className={`rounded-full py-4 flex-row items-center justify-center shadow-xl active:scale-[0.98] transition-all ${
