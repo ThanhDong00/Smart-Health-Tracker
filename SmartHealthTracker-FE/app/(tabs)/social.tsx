@@ -144,7 +144,7 @@ export default function SocialScreen() {
       <View className="flex-1">
         {/* My Group Navigation Button */}
         <TouchableOpacity
-          className={`mb-4 p-4 rounded-2xl items-center ${isDark ? "bg-primary-dark shadow-lg" : "bg-primary shadow-md"}`}
+          className={`mb-4 p-4 rounded-2xl items-center ${isDark ? "bg-primary-dark shadow-lg" : "bg-secondary shadow-md"}`}
           onPress={() => router.push("/social/groups/groups")}
         >
           <Text
