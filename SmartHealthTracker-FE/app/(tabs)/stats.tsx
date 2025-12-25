@@ -103,7 +103,6 @@ export default function StatsScreen() {
               yAxisLabelSuffix=""
             />
           </View>
-
         </View>
       </ScrollView>
     </SafeAreaView>
